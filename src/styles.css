@@ -1,0 +1,102 @@
+:root {color-scheme:dark;font-family:Arial,Helvetica,sans-serif;color:#eee;background:#000;font-synthesis:none;-webkit-font-smoothing:antialiased}
+* {box-sizing:border-box}
+body {margin:0;overflow:hidden}
+button {font:inherit;cursor:pointer;border:0;color:inherit;background:transparent;padding:0;touch-action:manipulation}
+button:disabled {opacity:.35;cursor:wait}
+button:focus-visible {outline:1px solid #b7b7b7;outline-offset:8px}
+.experience,.world {position:fixed;inset:0;background:#000}
+.world canvas {display:block}
+.masthead {position:absolute;left:44px;right:44px;top:38px;display:flex;justify-content:space-between;pointer-events:none;font:10px/1.4 ui-monospace,monospace;letter-spacing:.18em;color:#888}
+.gift-mark {color:#5a5a5a}
+.scene-switch {pointer-events:auto;color:#777;text-decoration:none;font:inherit;letter-spacing:.1em}
+.scene-nav {display:flex;gap:24px;pointer-events:auto}
+.forest-experience .invitation {bottom:12vh}
+.forest-experience h1 {font-size:clamp(54px,5.7vw,88px)}
+.forest-experience .overline,.forest-experience .chapter-number {color:#85b5c1}
+.forest-experience .chapter p {color:#d2ecff}
+.forest-experience .description {color:#a2b3c7}
+.scene-switch:hover {color:#fff}
+/* Keep the study unobstructed; controls appear when approached or focused. */
+.ring-experience .masthead {color:#777;opacity:0;transition:opacity .25s}
+.ring-experience .masthead:hover,.ring-experience .masthead:focus-within {opacity:1}
+.ring-controls {position:absolute;bottom:24px;left:50%;transform:translateX(-50%)}
+.ring-controls button {padding:14px 20px;font:9px/1.4 ui-monospace,monospace;letter-spacing:.12em;color:#aaa;opacity:.35;transition:opacity .2s}
+.ring-controls button:hover,.ring-controls button:focus-visible {opacity:1;color:#fff}
+.scene-switch:focus-visible {outline:1px solid #aaa;outline-offset:6px}
+.city-experience .invitation {bottom:13vh}
+.city-experience h1 {font-size:clamp(54px,6vw,92px)}
+.invitation {position:absolute;left:7.2vw;bottom:15vh;max-width:720px}
+.overline {font:9px/1.4 ui-monospace,monospace;letter-spacing:.18em;color:#787878;margin:0 0 25px}
+h1 {font-size:clamp(54px,7.1vw,108px);line-height:.98;letter-spacing:-.067em;font-weight:400;margin:0 0 30px}
+h1 em {font-family:Georgia,'Times New Roman',serif;font-weight:400;letter-spacing:-.059em}
+.description {white-space:pre-line;font-size:14px;line-height:1.65;color:#8a8a8a;margin:0 0 36px;max-width:390px}
+.entry-actions {display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+.entry-actions button {font:10px/1.5 ui-monospace,monospace;letter-spacing:.08em;text-align:left;color:#747474}
+.entry-actions .primary-action {color:#eee}
+.entry-actions span {margin-left:13px;display:inline-block;transition:transform .25s}
+.entry-actions button:hover {color:#fff}
+.entry-actions button:hover span {transform:translateX(4px)}
+.entry-note {font:9px/1.4 ui-monospace,monospace;color:#454545;margin:20px 0 0}
+.signature {position:absolute;left:44px;bottom:34px;font:8px/1.4 ui-monospace,monospace;letter-spacing:.2em;color:#414141;pointer-events:none}
+.is-running .masthead {color:#505050;font-size:8px}
+.is-running .gift-mark {display:none}
+.chapter {position:absolute;left:44px;bottom:59px;pointer-events:none}
+.chapter-number {font:8px/1.5 ui-monospace,monospace;letter-spacing:.16em;color:#666}
+.chapter p {font-family:Georgia,'Times New Roman',serif;font-size:25px;font-style:italic;letter-spacing:-.02em;margin:9px 0 0;color:#bbb}
+.journey-controls {position:absolute;right:44px;bottom:58px;display:flex;gap:28px;font:8px/1.4 ui-monospace,monospace;letter-spacing:.1em;color:#858585}
+.journey-controls button:hover {color:#fff}
+.journey-controls span {margin-left:8px;color:#3d3d3d}
+.about-trigger {position:absolute;left:44px;top:38px;z-index:4;min-height:32px;color:#858585;font:8px/1.4 ui-monospace,monospace;letter-spacing:.1em}
+.about-trigger:hover {color:#fff}
+.about-page {position:fixed;inset:0;z-index:20;overflow:auto;background:rgba(3,3,3,.96);color:#d9d4cb}
+.about-sheet {position:relative;min-height:100%;padding:clamp(76px,11vh,132px) max(24px,9vw) 90px}
+.about-close {position:absolute;top:38px;right:max(24px,9vw);color:#858585;font:8px/1.4 ui-monospace,monospace;letter-spacing:.1em}
+.about-close:hover {color:#fff}
+.about-copy {max-width:680px;margin:0 auto;font-family:Georgia,'Times New Roman',serif;font-size:clamp(16px,1.45vw,20px);line-height:1.72;color:#aaa39a}
+.about-copy h1 {margin:0 0 12px;color:#f0dfbf;font:400 clamp(42px,6vw,78px)/.98 Arial,Helvetica,sans-serif;letter-spacing:-.06em}
+.about-copy .about-lead {margin:0 0 42px;color:#d5bb8e;font-style:italic;font-size:clamp(19px,1.8vw,25px);line-height:1.35}
+.about-copy p {margin:0 0 25px}
+@media(max-width:700px){.about-trigger{left:24px;top:25px;min-height:44px;font-size:9px}.about-sheet{padding:84px 24px 62px}.about-close{top:25px;right:24px;min-height:44px}.about-copy{font-size:16px;line-height:1.62}.about-copy .about-lead{margin-bottom:32px}}
+.movement-note {position:absolute;left:44px;bottom:27px;font:7px/1.4 ui-monospace,monospace;letter-spacing:.15em;color:#3a3a3a;margin:0;pointer-events:none}
+.distance-readout {position:absolute;right:44px;bottom:27px;font:8px/1.4 ui-monospace,monospace;color:#404040;pointer-events:none}
+.notice {position:absolute;top:76px;left:44px;right:44px;font:11px/1.6 ui-monospace,monospace;color:#999;max-width:540px}
+.canvas-fallback {padding:100px 44px;color:#888;font-size:13px}
+@media(max-width:700px) {
+  .scene-nav {gap:12px;font-size:6px}
+  .masthead {left:24px;right:24px;top:25px;font-size:8px}
+  .gift-mark {display:none}
+  .invitation {left:24px;right:24px;bottom:17vh}
+  h1 {font-size:clamp(52px,12vw,78px)}
+  .overline {font-size:7px;letter-spacing:.1em;margin-bottom:20px}
+  .description {font-size:12px;max-width:290px}
+  .walk-action,.desktop-note {display:none}
+  .entry-actions .follow-action {color:#eee}
+  .signature {left:24px;bottom:28px;font-size:6px}
+  .chapter {left:24px;bottom:60px}
+  .chapter p {font-size:22px}
+  .journey-controls {right:24px;bottom:62px;gap:17px;font-size:7px}
+  .movement-note {left:24px;bottom:28px;font-size:6px;max-width:230px}
+  .distance-readout {right:24px;bottom:28px}
+  .notice {left:24px;right:24px}
+}
+@media(prefers-reduced-motion:reduce) {.entry-actions span {transition:none}}
+.filament-study {position:absolute;left:44px;right:44px;bottom:38px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;pointer-events:none}
+.filament-study .overline {color:#bc965b;margin-bottom:10px}
+.study-title {font:italic 32px/1.2 Georgia,serif;color:#f1ddbb;margin:0 0 10px}
+.study-note {font:9px/1.4 ui-monospace,monospace;letter-spacing:.06em;color:#8b8278;margin:0}
+.study-actions {display:flex;flex-wrap:wrap;align-items:center;gap:10px;pointer-events:auto}
+.study-actions button {border:1px solid #756042;padding:13px 18px;background:#070604bb;font:9px/1.4 ui-monospace,monospace;letter-spacing:.1em;color:#d5be97}
+.study-actions button:hover {border-color:#cba369;color:#fff1d3}
+@media(max-width:700px){.filament-study{left:24px;right:24px;bottom:26px;align-items:flex-start;flex-direction:column;gap:16px}.study-title{font-size:25px}.study-actions button{padding:12px 16px}}
+.matter-camera{position:absolute;right:28px;top:94px;width:220px;padding:16px;background:rgba(16,3,1,.77);border:1px solid rgba(255,151,83,.22);backdrop-filter:blur(14px);color:#e7b38b;font:10px monospace;z-index:5}
+.matter-modes{display:flex;gap:6px;margin-bottom:16px}.matter-camera button{font:10px monospace;color:inherit;background:transparent;border:1px solid #713e23;padding:7px 12px;cursor:pointer}.matter-camera button[aria-pressed=true]{background:#b75c25;color:#fff1db;border-color:#dc8246}
+.matter-camera summary{cursor:pointer;font-size:9px;letter-spacing:1px;margin-bottom:14px}.matter-camera label{display:block;margin:11px 0}.matter-camera label span{display:flex;justify-content:space-between}.matter-camera input{display:block;width:100%;height:14px;accent-color:#ed9c56;margin-top:5px}.matter-reset{margin-top:6px}
+@media(max-width:600px){.matter-camera{right:12px;top:70px;width:155px;padding:10px}.matter-camera label{margin:7px 0}.matter-camera summary{font-size:8px}.matter-camera button{font-size:9px;padding:6px 9px}.scene-nav{max-width:185px}.matter-camera details{max-height:52vh;overflow:auto}}
+
+.matter-camera details{max-height:calc(100vh - 340px);overflow-y:auto;scrollbar-width:thin} .matter-camera details label{padding-right:5px}
+
+.journey-controls {animation:controls-reveal .7s ease both;letter-spacing:0}
+.journey-controls button {min-height:32px}
+@keyframes controls-reveal {from{opacity:0}to{opacity:1}}
+@media(max-width:700px) {.journey-controls {bottom:calc(30px + env(safe-area-inset-bottom));font-size:9px}.journey-controls button{min-height:44px}}
+@media(prefers-reduced-motion:reduce) {.journey-controls {animation:none}}

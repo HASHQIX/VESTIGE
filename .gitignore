@@ -1,0 +1,13 @@
+node_modules
+.npm-cache/
+dist/
+.vercel/
+.env
+.env.*
+!.env.example
+artifacts/
+.DS_Store
+*.tsbuildinfo
+public/hairline/*-look.png
+public/hairline/*-rest.png
+public/hairline/*-answer.png

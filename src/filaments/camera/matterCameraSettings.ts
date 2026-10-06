@@ -1,0 +1,4 @@
+export type MatterCameraSettings={temporal:boolean;worldFlowSpeed:number;worldMemory:number;worldWave:number;baseFibers:number;persistence:number;trailLength:number;velocityScale:number;flowSmear:number;flowLength:number;flowCurvature:number;flowLayers:number;flowNoise:number;depthGuard:number;streakThreshold:number;particleStreak:number;bloom:number}
+export const defaultMatterCamera:MatterCameraSettings={temporal:true,worldFlowSpeed:1,worldMemory:1.5,worldWave:.75,baseFibers:.12,persistence:.82,trailLength:.7,velocityScale:1,flowSmear:.2,flowLength:60,flowCurvature:1,flowLayers:3,flowNoise:.55,depthGuard:.55,streakThreshold:.8,particleStreak:1,bloom:.38}
+export function historyDecay(persistence:number,dt:number){return Math.pow(Math.max(0,Math.min(.99,persistence)),Math.max(0,dt)*60)}
+export function cameraCut(distance:number,rotation:number,dt:number,clockDelta:number){return distance>3||rotation>.42||dt>.2||clockDelta<0}

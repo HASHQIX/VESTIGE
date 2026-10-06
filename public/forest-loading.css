@@ -1,0 +1,17 @@
+#startup-loading{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:#030303;opacity:1;transition:opacity .7s ease;overflow:hidden;color:#eee;font-family:Arial,Helvetica,sans-serif}
+#startup-loading.is-leaving{opacity:0;pointer-events:none}
+#startup-loading .loader-content{text-align:center;width:min(320px,calc(100vw - 48px))}
+#startup-loading .loader-sound{position:relative;display:inline-block;padding:12px 4px;border:0;background:transparent;color:#eee;font:24px/1.3 Arial,Helvetica,sans-serif;letter-spacing:0;cursor:pointer;animation:sound-prompt 1.8s ease-in-out infinite}
+#startup-loading .loader-label{position:relative;z-index:1}
+#startup-loading .loader-sound:focus-visible{outline:1px solid #aaa;outline-offset:4px}
+#startup-loading .loader-sound:disabled{cursor:default;opacity:1}
+#startup-loading.sound-enabled .loader-sound{animation:none;color:#f3dfbb}
+#startup-loading.sound-enabled .loader-label{color:transparent;background:linear-gradient(105deg,#c49d5d 0%,#c49d5d 40%,#ffc974 47%,#fff2cf 50%,#ffc974 53%,#c49d5d 60%,#c49d5d 100%);background-size:300% 100%;background-position:100% 0;-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 0 5px rgba(255,183,71,.65));animation:sound-shimmer 2.2s ease-in-out infinite}
+#startup-loading .loader-status{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@keyframes sound-prompt{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes sound-shimmer{0%{background-position:100% 0}80%,100%{background-position:0% 0}}
+#startup-loading .loader-error{position:absolute;left:24px;right:24px;bottom:8%;text-align:center;font:13px/1.6 Arial,Helvetica,sans-serif}
+#startup-loading .loader-error p{max-width:380px;margin:0 auto 16px}
+#startup-loading .loader-error button{padding:10px 18px;border:1px solid #a88757;background:#030303;color:#edd8b6;font:inherit;cursor:pointer}
+#startup-loading [hidden]{display:none}
+@media(prefers-reduced-motion:reduce){#startup-loading{transition-duration:.2s}#startup-loading .loader-sound{animation:none}#startup-loading.sound-enabled .loader-label{animation:none;background-position:50% 0}}

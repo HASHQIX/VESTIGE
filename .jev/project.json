@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "profiles": [],
+  "checks": [
+    {
+      "name": "production-build",
+      "cwd": ".",
+      "argv": [
+        "npm",
+        "run",
+        "build"
+      ]
+    }
+  ]
+}
