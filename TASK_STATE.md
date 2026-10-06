@@ -83,3 +83,18 @@ headless WebGL entered `data-mode="walk"` with the loader removed, canvas visibl
 and no page errors. Jev retry still failed before checks/API review because the
 parent Git repository has no `HEAD` (`git_command_failed`); review coverage is
 unavailable.
+
+Deployment preparation: initialized a standalone `main` repository for
+`HASHQIX/VESTIGE`, committed Vite deployment configuration and updated project
+README, pinned Node.js 22, and replaced the inherited node_modules symlink with
+dependencies installed from the lockfile. Production build passes. Jev deep
+review ran its production-build check successfully; it reviewed 16 fragments,
+reported zero flagged findings and 16 uncertain fragments, deferred 750, and
+excluded 41 static-only files. Not a complete review. First commit was pushed to
+GitHub; remote main matched `d6f110a8fa7fae98e2a991890d3448e001d2c779`.
+
+Follow-up: independent investigation of Jev's uncertain App fragments found
+that keyboard movement could resume walking behind the About dialog. Controller
+input and the walk action are now gated while About is open. Build passes;
+browser interaction check is running. Commit and push this follow-up before
+handing control back.
