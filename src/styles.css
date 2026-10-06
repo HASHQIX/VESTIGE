@@ -60,6 +60,11 @@ h1 em {font-family:Georgia,'Times New Roman',serif;font-weight:400;letter-spacin
 .about-copy h1 {margin:0 0 12px;color:#bf9970;font:300 56px/.98 'Vestige Serif',Georgia,serif;letter-spacing:0}
 .about-copy .about-lead {margin:0 0 42px;color:#bf9970;font-style:normal;font-size:25px;line-height:1.35}
 .about-copy p {margin:0 0 25px}
+.about-credit {margin-top:42px;font-size:16px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.about-social {display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid currentColor;border-radius:50%;color:inherit;transition:color .2s,box-shadow .2s}
+.about-social svg {width:16px;height:16px}
+.about-social:hover {color:#d2b38c;box-shadow:0 0 12px rgba(191,153,112,.2)}
+.about-social:focus-visible {outline:1px solid currentColor;outline-offset:4px}
 @media(max-width:700px){.about-trigger{left:24px;top:25px;min-height:44px;font-size:13px}.about-sheet{padding:84px 24px 62px}.about-close{top:25px;right:24px;min-height:44px;font-size:13px}.about-copy{font-size:17px;line-height:1.62}.about-copy h1{font-size:46px}.about-copy .about-lead{margin-bottom:32px;font-size:21px}.journey-controls{right:24px;bottom:62px;gap:17px;font-size:13px}}
 .movement-note {position:absolute;left:44px;bottom:27px;font:7px/1.4 ui-monospace,monospace;letter-spacing:.15em;color:#3a3a3a;margin:0;pointer-events:none}
 .distance-readout {position:absolute;right:44px;bottom:27px;font:8px/1.4 ui-monospace,monospace;color:#404040;pointer-events:none}

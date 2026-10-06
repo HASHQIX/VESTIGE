@@ -34,6 +34,17 @@ Remaining: Native WebGPU/browser mouse capture verification, Jev review, and
 make dependencies self-contained before GitHub/Vercel deployment. GitHub/Vercel
 publication has not been performed.
 
+Current local experiment: removed the supplied sky video, its two-decoder loop,
+and the video asset. Replaced them with `ProceduralSkySilhouette` and a
+deterministic instanced gold-particle panorama: a forest edge, layered mountain
+profiles, a volcano ridge, and sparse smoke filaments. The panorama follows
+camera translation, uses a native TSL material on WebGPU and a GLSL material on
+WebGL, and fades in/out from the nearest mushroom distance (44m to 14m). The
+effect is disabled with `?sky=off`; debug snapshot remains available with
+`?debug=1`. The latest WebGL snapshot reports 11,526 particles, proximity 1,
+and no page errors after 12 seconds of loading. `npm run build` and
+`git diff --check` pass. No commit or push has been made for this experiment.
+
 Validation: Initial build exposed an unclosed JSX fragment, corrected. `npm run
 build` passes. Vite dev server is running at http://127.0.0.1:5177/; the HTML
 entry point and `/sound.wav` both return HTTP 200.
@@ -303,3 +314,33 @@ behavior/side-effect/context questions were investigated against the complete
 loader, its animation event, scene-ready gate and browser checks; no confirmed
 defect. Classifier uncertainty remains, so this is not a clean review.
 User authorized commit/push of this change; author Toli <shumerhere@gmail.com>.
+
+Current objective: local procedural sky-silhouette experiment. The supplied video
+prototype and its generated `public/video/vestige-sky-muted.mp4` asset have been
+removed. The replacement is a deterministic upper-hemisphere panorama of gold
+instanced sprites shaped as forest, layered mountains, a volcano, and sparse
+smoke filaments. Its WebGL shader and native WebGPU TSL material share the same
+geometry; `sky=off` offers a local comparison. Proximity to any mushroom fades
+the panorama between 44m and 14m. Do not publish this experiment before visual
+approval.
+About author and X credit changes remain local, awaiting their authorized push.
+
+Latest sky revision: removed the procedural mountain particle field entirely.
+The distant layer now consists of continuous circular volcanic and low-ridge
+contour lines, with animated dashed glow passing along both contours. Added 144
+sparse stars in three subtly pulsing sizes and five lightweight meteor trails
+that move and fade. This sky is always lit during the active Forest walk instead
+of fading by mushroom distance. Build passes; no commit or push requested.
+
+Visibility fix: the distant contour, star, and meteor materials now bypass the
+Forest fog, which had been fading the entire sky layer to black at its 218m
+radius. Star sizes were increased slightly for reliable visibility.
+
+Latest direction: removed both volcanic contour layers and all meteor trails
+after visual review. The distant layer is now only a larger, denser star field:
+190 stars in three fixed pixel sizes with restrained independent pulsing. Build
+and diff checks pass; local visual review remains next.
+
+Star visibility pass: increased the field to 306 stars, enlarged all three star
+groups, raised their gold opacity, and reduced pulse variation so they remain
+clearly visible. Build and diff checks pass.
