@@ -100,3 +100,26 @@ browser interaction check confirmed About pauses, arrow keys leave it paused,
 and Escape closes About and resumes walking. Follow-up commit `0d8adbd` was
 pushed to origin/main. Git working tree clean; remote main should be verified
 against that commit.
+
+Current local optimization: replace the background WAV with a stereo 44.1 kHz
+192 kbps MP3. Public asset is `public/sound.mp3` (6,777,879 bytes), down from
+74,710,670 bytes by 90.93%. Original WAV moved intact to ignored
+`audio-originals/sound.wav`; it matches the supplied sond1.wav. The user has
+authorized committing and pushing this optimization to HASHQIX/VESTIGE main
+with author email shumerhere@gmail.com. Vercel deployment remains unverified.
+
+Validation: production build passes; dist contains MP3 and no WAV. Local server
+returns MP3 with audio/mpeg and the expected size. Chromium decodes duration
+282.352947845805 seconds, stereo, 44.1 kHz. Background gain remains 0.072,
+spatial graph unchanged, schedule gap is duration minus 10s, and two loop sources
+overlap. Mute/unmute and pause/resume checks pass. Real Forest loader dismisses
+into walk, requests only /sound.mp3 for the bed, and reports no page errors.
+Perceptual listening and cold-network timing comparisons remain unverified.
+
+Jev quick review: production-build passed; 1 changed fragment reviewed,
+0 flagged, 1 uncertain, 0 deferred, 3 files static-only (ignore file and audio
+assets). Uncertain audio-path/task-context concerns investigated against loader,
+asset presence, original comparison, decoded duration and browser playback/loop
+tests; no additional confirmed issue. Classifier ledger still marks uncertain;
+this is not a clean review. Local validation is complete; no further code
+changes planned for this optimization. Vercel deployment status is not checked.

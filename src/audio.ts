@@ -81,7 +81,7 @@ export class WorldAudio {
     voice.input.gain.value=peak>0?Math.min(8,.7/peak):1
    }).catch(()=>undefined)
   })
-  if(!g.bed.buffer){const buffer=await this.load('/sound.wav',g);if(this.graph!==g||g.bed.buffer)return;g.bed.buffer=buffer}
+  if(!g.bed.buffer){const buffer=await this.load('/sound.mp3',g);if(this.graph!==g||g.bed.buffer)return;g.bed.buffer=buffer}
  }
 
  async start(){
