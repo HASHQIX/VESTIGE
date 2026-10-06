@@ -288,3 +288,18 @@ source, CSS timing, scene readiness and browser checks; no confirmed issue.
 49 omitted attention entries are deferred; no extra flagged/uncertain entries
 were omitted. Review remains partial; excluded font/license/documentation are
 not API-reviewed. No publication performed. Next: user visual evaluation.
+
+Current follow-up: keep all startup text fully revealed for four seconds after
+the slogans' copy-reveal animation ends before allowing automatic dust exit.
+Scene readiness remains required. Reduced motion also gets four seconds of
+readable text before its short fade. Timer is started only once. Browser checks
+passed for normal/reduced motion, repeated reveal events and late scene
+readiness. Production build and git diff --check passed. An initial fake-clock
+boundary check was timing-sensitive; real-timer checks confirmed the hold.
+
+Jev reviewed the one changed source fragment: 0 flagged, 1 uncertain, 0 deferred,
+1 static-only file (this state document). Build check passed. The uncertain
+behavior/side-effect/context questions were investigated against the complete
+loader, its animation event, scene-ready gate and browser checks; no confirmed
+defect. Classifier uncertainty remains, so this is not a clean review.
+User authorized commit/push of this change; author Toli <shumerhere@gmail.com>.

@@ -3,10 +3,16 @@
  if(!overlay)return;
  const button=overlay.querySelector('.loader-sound'),status=overlay.querySelector('.loader-status');
  let handler,revealHandler,context,sceneReady=false,failed=false,leaving=false,resolveFinish;
- let revealReady=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ let revealReady=false,readingHoldStarted=false;
  const completion=new Promise(resolve=>{resolveFinish=resolve});
  const tagline=overlay.querySelector('.loader-tagline');
- tagline.addEventListener('animationend',event=>{if(event.target===tagline&&event.animationName==='copy-reveal'){revealReady=true;enter()}});
+ function holdForReading(){
+  if(readingHoldStarted)return;
+  readingHoldStarted=true;
+  window.setTimeout(()=>{revealReady=true;enter()},4000);
+ }
+ tagline.addEventListener('animationend',event=>{if(event.target===tagline&&event.animationName==='copy-reveal')holdForReading()});
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches)holdForReading();
  function revealWorld(){
   revealHandler?.();overlay.classList.add('is-leaving');
   window.setTimeout(()=>{overlay.remove();resolveFinish()},matchMedia('(prefers-reduced-motion: reduce)').matches?220:2250);
