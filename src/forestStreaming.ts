@@ -20,7 +20,7 @@ export function completeMushroomRegion(region:FilamentRegion,layout:ForestLayout
  for(const m of layout.mushrooms){
   const frame=mushroomFrame(m),r=m.radius*1.12,pad=2.2
   const nearX=Math.max(region.min[0],Math.min(region.max[0],m.x)),nearZ=Math.max(region.min[2],Math.min(region.max[2],m.z))
-  if(Math.hypot(nearX-m.x,nearZ-m.z)>m.radius*.46+4||frame.base>region.max[1]||frame.crown.y+m.radius*.3<region.min[1])continue
+  if(Math.hypot(nearX-m.x,nearZ-m.z)>m.radius*.46+4||frame.crown.y+m.radius*.3<region.min[1])continue
   const low:P=[Math.min(m.x,frame.crown.x)-r-pad,frame.base-Math.max(.4,m.radius*.3)-pad,Math.min(m.z,frame.crown.z)-r-pad]
   const high:P=[Math.max(m.x,frame.crown.x)+r+pad,frame.crown.y+Math.max(.4,m.radius*.3)+pad,Math.max(m.z,frame.crown.z)+r+pad]
   for(let k=0;k<3;k++){min[k]=Math.min(min[k],low[k]);max[k]=Math.max(max[k],high[k])}
@@ -31,7 +31,7 @@ export function nearbyMushroomReach(layout:ForestLayout,p:Vector3):number {
  let reach=0
  for(const m of layout.mushrooms){
   const {base,crown}=mushroomFrame(m),distance=Math.hypot(p.x-m.x,p.z-m.z),near=m.radius*.46+8,far=near+10
-  if(distance>=far||p.y<base-4||p.y>crown.y+m.radius+4)continue
+  if(distance>=far||p.y>crown.y+m.radius+4)continue
   const t=Math.max(0,Math.min(1,(far-distance)/(far-near))),weight=t*t*(3-2*t)
   const extent=Math.hypot(distance+m.radius*1.25+Math.abs(crown.x-m.x)+Math.abs(crown.z-m.z),Math.max(Math.abs(p.y-base),Math.abs(p.y-crown.y))+m.radius*.3)
   reach=Math.max(reach,extent*weight)

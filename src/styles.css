@@ -1,4 +1,5 @@
 :root {color-scheme:dark;font-family:Arial,Helvetica,sans-serif;color:#eee;background:#000;font-synthesis:none;-webkit-font-smoothing:antialiased}
+@font-face {font-family:'Vestige Serif';src:url('/fonts/cormorant-garamond-light.woff2') format('woff2');font-style:normal;font-weight:300;font-display:swap}
 * {box-sizing:border-box}
 body {margin:0;overflow:hidden}
 button {font:inherit;cursor:pointer;border:0;color:inherit;background:transparent;padding:0;touch-action:manipulation}
@@ -43,20 +44,23 @@ h1 em {font-family:Georgia,'Times New Roman',serif;font-weight:400;letter-spacin
 .chapter {position:absolute;left:44px;bottom:59px;pointer-events:none}
 .chapter-number {font:8px/1.5 ui-monospace,monospace;letter-spacing:.16em;color:#666}
 .chapter p {font-family:Georgia,'Times New Roman',serif;font-size:25px;font-style:italic;letter-spacing:-.02em;margin:9px 0 0;color:#bbb}
-.journey-controls {position:absolute;right:44px;bottom:58px;display:flex;gap:28px;font:8px/1.4 ui-monospace,monospace;letter-spacing:.1em;color:#858585}
-.journey-controls button:hover {color:#fff}
+.journey-controls {position:absolute;right:44px;bottom:58px;display:flex;gap:28px;font:300 16px/1.5 'Vestige Serif',Georgia,serif;letter-spacing:0;color:#bf9970}
+.journey-controls button {color:inherit}
+.journey-controls button:hover {color:#d2b38c}
 .journey-controls span {margin-left:8px;color:#3d3d3d}
-.about-trigger {position:absolute;left:44px;top:38px;z-index:4;min-height:32px;color:#858585;font:8px/1.4 ui-monospace,monospace;letter-spacing:.1em}
-.about-trigger:hover {color:#fff}
-.about-page {position:fixed;inset:0;z-index:20;overflow:auto;background:rgba(3,3,3,.96);color:#d9d4cb}
+.about-trigger {position:absolute;left:44px;top:38px;z-index:4;min-height:32px;color:#bf9970;font:300 16px/1.5 'Vestige Serif',Georgia,serif;letter-spacing:0}
+.about-trigger:hover {color:#d2b38c}
+.continue-action {position:absolute;left:50%;top:50%;z-index:4;transform:translate(-50%,-50%);padding:16px 24px;min-height:48px;color:#bf9970;font:300 20px/1.5 'Vestige Serif',Georgia,serif;letter-spacing:0}
+.continue-action:hover {color:#d2b38c}
+.about-page {position:fixed;inset:0;z-index:20;overflow:auto;background:rgba(3,3,3,.96);color:#bf9970;font-family:'Vestige Serif',Georgia,serif;font-weight:300}
 .about-sheet {position:relative;min-height:100%;padding:clamp(76px,11vh,132px) max(24px,9vw) 90px}
-.about-close {position:absolute;top:38px;right:max(24px,9vw);color:#858585;font:8px/1.4 ui-monospace,monospace;letter-spacing:.1em}
-.about-close:hover {color:#fff}
-.about-copy {max-width:680px;margin:0 auto;font-family:Georgia,'Times New Roman',serif;font-size:clamp(16px,1.45vw,20px);line-height:1.72;color:#aaa39a}
-.about-copy h1 {margin:0 0 12px;color:#f0dfbf;font:400 clamp(42px,6vw,78px)/.98 Arial,Helvetica,sans-serif;letter-spacing:-.06em}
-.about-copy .about-lead {margin:0 0 42px;color:#d5bb8e;font-style:italic;font-size:clamp(19px,1.8vw,25px);line-height:1.35}
+.about-close {position:absolute;top:38px;right:max(24px,9vw);min-height:32px;color:#bf9970;font:300 16px/1.5 'Vestige Serif',Georgia,serif;letter-spacing:0}
+.about-close:hover {color:#d2b38c}
+.about-copy {max-width:680px;margin:0 auto;font:300 20px/1.72 'Vestige Serif',Georgia,serif;color:#bf9970}
+.about-copy h1 {margin:0 0 12px;color:#bf9970;font:300 56px/.98 'Vestige Serif',Georgia,serif;letter-spacing:0}
+.about-copy .about-lead {margin:0 0 42px;color:#bf9970;font-style:normal;font-size:25px;line-height:1.35}
 .about-copy p {margin:0 0 25px}
-@media(max-width:700px){.about-trigger{left:24px;top:25px;min-height:44px;font-size:9px}.about-sheet{padding:84px 24px 62px}.about-close{top:25px;right:24px;min-height:44px}.about-copy{font-size:16px;line-height:1.62}.about-copy .about-lead{margin-bottom:32px}}
+@media(max-width:700px){.about-trigger{left:24px;top:25px;min-height:44px;font-size:13px}.about-sheet{padding:84px 24px 62px}.about-close{top:25px;right:24px;min-height:44px;font-size:13px}.about-copy{font-size:17px;line-height:1.62}.about-copy h1{font-size:46px}.about-copy .about-lead{margin-bottom:32px;font-size:21px}.journey-controls{right:24px;bottom:62px;gap:17px;font-size:13px}}
 .movement-note {position:absolute;left:44px;bottom:27px;font:7px/1.4 ui-monospace,monospace;letter-spacing:.15em;color:#3a3a3a;margin:0;pointer-events:none}
 .distance-readout {position:absolute;right:44px;bottom:27px;font:8px/1.4 ui-monospace,monospace;color:#404040;pointer-events:none}
 .notice {position:absolute;top:76px;left:44px;right:44px;font:11px/1.6 ui-monospace,monospace;color:#999;max-width:540px}
@@ -74,7 +78,7 @@ h1 em {font-family:Georgia,'Times New Roman',serif;font-weight:400;letter-spacin
   .signature {left:24px;bottom:28px;font-size:6px}
   .chapter {left:24px;bottom:60px}
   .chapter p {font-size:22px}
-  .journey-controls {right:24px;bottom:62px;gap:17px;font-size:7px}
+  .journey-controls {right:24px;bottom:62px;gap:17px;font-size:13px}
   .movement-note {left:24px;bottom:28px;font-size:6px;max-width:230px}
   .distance-readout {right:24px;bottom:28px}
   .notice {left:24px;right:24px}
@@ -98,5 +102,5 @@ h1 em {font-family:Georgia,'Times New Roman',serif;font-weight:400;letter-spacin
 .journey-controls {animation:controls-reveal .7s ease both;letter-spacing:0}
 .journey-controls button {min-height:32px}
 @keyframes controls-reveal {from{opacity:0}to{opacity:1}}
-@media(max-width:700px) {.journey-controls {bottom:calc(30px + env(safe-area-inset-bottom));font-size:9px}.journey-controls button{min-height:44px}}
+@media(max-width:700px) {.journey-controls {bottom:calc(30px + env(safe-area-inset-bottom));font-size:13px}.journey-controls button{min-height:44px}}
 @media(prefers-reduced-motion:reduce) {.journey-controls {animation:none}}

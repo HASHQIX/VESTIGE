@@ -3,7 +3,7 @@ type Point={x:number;y:number;z:number}
 type TrackSource={source:AudioBufferSourceNode;gain:GainNode}
 type Loop={input:GainNode;buffer?:AudioBuffer;nextAt:number;fade:number;enabled:boolean;sources:Set<TrackSource>}
 type Voice=Loop&{panner:PannerNode;output:GainNode;id?:number;distance:number;level:number}
-type Graph={context:AudioContext;space:ConvolverNode;master:GainNode;analyser:AnalyserNode;bed:Loop;voices:Voice[];timer:number}
+type Graph={context:AudioContext;space:ConvolverNode;master:GainNode;entrance:GainNode;entranceStarted:boolean;analyser:AnalyserNode;bed:Loop;voices:Voice[];timer:number}
 
 const BACKGROUND_GAIN=.10
 export const MUSHROOM_TRACKS=['/audio/mushroom-1.m4a','/audio/mushroom-2.m4a','/audio/mushroom-3.m4a','/audio/mushroom-4.m4a','/audio/mushroom-5.m4a','/audio/mushroom-6.m4a','/audio/mushroom-7.m4a','/audio/mushroom-8.m4a']
@@ -21,13 +21,13 @@ export class WorldAudio {
 
  private create(unlockedContext?:AudioContext){
   if(this.graph)return this.graph
-  const context=unlockedContext??new AudioContext(),space=context.createConvolver(),master=context.createGain(),analyser=context.createAnalyser()
-  master.gain.value=0;analyser.fftSize=256
+  const context=unlockedContext??new AudioContext(),space=context.createConvolver(),master=context.createGain(),entrance=context.createGain(),analyser=context.createAnalyser()
+  master.gain.value=0;entrance.gain.value=0;analyser.fftSize=256
   const impulse=context.createBuffer(2,Math.floor(context.sampleRate*1.8),context.sampleRate)
   for(let channel=0;channel<2;channel++){const data=impulse.getChannelData(channel);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,3)*.18}
   space.buffer=impulse;space.normalize=true
   const wet=context.createGain();wet.gain.value=.10
-  space.connect(wet).connect(master);master.connect(analyser).connect(context.destination)
+  space.connect(wet).connect(master);master.connect(entrance).connect(analyser).connect(context.destination)
   const input=context.createGain();input.gain.value=.72*BACKGROUND_GAIN;input.connect(master);input.connect(space)
   const bed:Loop={input,nextAt:0,fade:10,enabled:true,sources:new Set()}
   const voices:Voice[]=MUSHROOM_TRACKS.map(()=>{
@@ -36,7 +36,7 @@ export class WorldAudio {
    input.connect(panner).connect(output);output.connect(master);output.connect(space)
    return {input,panner,output,nextAt:0,fade:5,enabled:false,sources:new Set<TrackSource>(),distance:Infinity,level:0}
   })
-  const graph:Graph={context,space,master,analyser,bed,voices,timer:0}
+  const graph:Graph={context,space,master,entrance,entranceStarted:false,analyser,bed,voices,timer:0}
   graph.timer=window.setInterval(()=>{
    if(context.state!=='running')return
    for(const loop of [bed,...voices]){
@@ -84,10 +84,14 @@ export class WorldAudio {
   if(!g.bed.buffer){const buffer=await this.load('/sound.mp3',g);if(this.graph!==g||g.bed.buffer)return;g.bed.buffer=buffer}
  }
 
- async start(){
+ async start(fadeIn=0){
   if(this.disposed)return
   this.active=true;await this.prepare();const g=this.graph;if(!g||!this.active)return
   if(g.bed.sources.size===0)this.schedule(g,g.bed,g.context.currentTime+.05)
+  if(!g.entranceStarted){
+   g.entranceStarted=true;g.entrance.gain.setValueAtTime(0,g.context.currentTime);
+   g.entrance.gain.linearRampToValueAtTime(1,g.context.currentTime+Math.max(0,fadeIn));
+  }
   g.master.gain.setTargetAtTime(this.muted?0:1,g.context.currentTime,.3)
  }
 
@@ -130,13 +134,13 @@ export class WorldAudio {
  info(){
   const g=this.graph;let rms=0
   if(g&&g.context.state==='running'){const data=new Float32Array(256);g.analyser.getFloatTimeDomainData(data);rms=Math.sqrt(data.reduce((sum,v)=>sum+v*v,0)/data.length)}
-  return {state:g?.context.state??'uninitialized',active:this.active,muted:this.muted,rms,mushrooms:this.mushrooms.length,voices:g?.voices.map((voice,track)=>({track:track+1,mushroom:voice.id,distance:voice.distance,level:voice.level,loaded:!!voice.buffer,playing:voice.sources.size>0}))??[]}
+  return {state:g?.context.state??'uninitialized',active:this.active,muted:this.muted,entranceGain:g?.entrance.gain.value??0,rms,mushrooms:this.mushrooms.length,voices:g?.voices.map((voice,track)=>({track:track+1,mushroom:voice.id,distance:voice.distance,level:voice.level,loaded:!!voice.buffer,playing:voice.sources.size>0}))??[]}
  }
 
  dispose(){
   this.disposed=true;this.abort.abort();const g=this.graph;this.graph=undefined;this.active=false;this.loaded.clear();if(!g)return
   window.clearInterval(g.timer);for(const loop of [g.bed,...g.voices])this.stopLoop(loop)
   for(const voice of g.voices){voice.input.disconnect();voice.panner.disconnect();voice.output.disconnect()}
-  g.bed.input.disconnect();g.space.disconnect();g.master.disconnect();g.analyser.disconnect();void g.context.close().catch(()=>undefined)
+  g.bed.input.disconnect();g.space.disconnect();g.master.disconnect();g.entrance.disconnect();g.analyser.disconnect();void g.context.close().catch(()=>undefined)
  }
 }

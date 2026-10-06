@@ -46,3 +46,9 @@ Import `HASHQIX/VESTIGE` from GitHub and use:
 - Node.js version: 22.x
 
 The only scene is VESTIGE, available at `/`. No query parameters are needed.
+
+## Startup Typography
+
+The app uses a self-hosted Latin subset of Cormorant Garamond Light by the
+Cormorant Project Authors, under the SIL Open Font License 1.1.
+The font and license are included in `public/fonts/`.

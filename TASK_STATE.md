@@ -123,3 +123,168 @@ asset presence, original comparison, decoded duration and browser playback/loop
 tests; no additional confirmed issue. Classifier ledger still marks uncertain;
 this is not a clean review. Local validation is complete; no further code
 changes planned for this optimization. Vercel deployment status is not checked.
+
+Current objective: Match the supplied VESTIGE startup typography and decorative
+lines locally, retaining the existing plain black background. Acceptance:
+centered two-line kicker, large thin gold serif name, horizontal/vertical lines
+and circular contour, lower tagline, text-only blinking Sound On and post-click
+shimmer. Preserve audio/scene readiness and transition into immediate walking.
+
+Completed: Updated index.html and forest-loading.css. Self-hosted 6,344-byte
+uppercase Cormorant Garamond Light subset with OFL license. Letter separation
+uses layout gaps; mobile tagline wraps into two balanced lines. Background,
+scene rendering, audio and loading controller remain unchanged.
+
+Validation: Production build passes. Playwright screenshots inspected at
+1440x900 and 390x844; 320x568 and 844x390 layouts also checked. Boundary widths
+320 through 1920 show no offscreen text. Browser loaded the local font and all
+40 CSS rules; text-only button, blinking, shimmer, reduced motion and readiness
+gating passed. Real headless WebGL entered walk with the overlay removed,
+1440x900 canvas visible and no JavaScript errors. Screenshot confirms visible
+Forest. Native WebGPU remains unverified.
+
+Jev: production-build passed; 1 HTML fragment reviewed, 0 flagged, 1 uncertain
+(behavior/task/context). Investigated against unchanged loader selectors and
+logic plus layout and real-entry browser checks; no confirmed defect found.
+1 deferred CSS file due to AST parse error, manually investigated with browser
+CSS rules/computed styles and screenshots. 2 static-only files (font/license).
+Classifier review is incomplete, not a clean pass.
+
+Remaining: User visual evaluation. No implementation blockers or required local
+checks remain. Next action: inspect http://127.0.0.1:5177/. Current startup changes
+are local only; no commit, push or deployment was requested for this change.
+
+Follow-up layout: User requested upper kicker higher, tagline lower, and Sound On
+near the bottom edge in matching serif. Loader content now spans the viewport;
+the title stays centered, kicker sits at 8-9% from top, tagline at 13-14% from
+bottom, Sound On at 4% with minimum/safe-area inset. Short landscape reserves
+more space between tagline and button. Font subset expanded to include Sound On
+lowercase (7,144 bytes); blinking and shimmer unchanged. Production build passes;
+desktop/mobile/small/landscape browser checks confirm separation, visible bottom
+button, matching serif, blinking, shimmer and ready-only removal. Local server
+continues at port 5177. No further code changes planned before user evaluation.
+
+Final requested typography adjustment: startup button now reads SOUND ON in
+uppercase and uses the tagline color #bf9970. Existing serif, blinking and
+post-click gold shimmer remain.
+
+App controls and About typography: ABOUT, CLOSE, SOUND ON/OFF, PAUSE/RESUME now
+use Vestige Serif and the same muted gold as the tagline. About body, lead and
+title share the font/color family, with restrained type sizes for hierarchy.
+Desktop and mobile browser checks confirm consistent computed font/color,
+readable wrapping, no horizontal overflow, and no page errors. Mobile controls
+are 13px after correcting a later legacy media rule that overrode their size.
+
+Font issue investigation: initial self-hosted TTF was a tiny custom character
+subset, so uncovered letters fell back to Georgia and made About look mixed.
+Replaced it with the 21,908-byte full Latin Cormorant WOFF2 subset. Browser
+confirmed it loads and covers the full About copy; screenshot shows consistent
+letterforms. README now records the font and OFL attribution.
+
+Tall mushroom visibility follow-up: near-mushroom focus no longer rejects the
+camera for being below a mushroom's base. Its focus extent already includes the
+vertical distance to the crown. Stream-region completion likewise includes an
+overhead mushroom when horizontally nearby, even when its base is above the
+current cell, baking region bounds through the cap. A targeted fixture with a
+42m elevated stem confirms 64m focus reach from below and region extension to
+65.8m. Production build and real scene entry pass after the change. Actual
+in-situ view under the user's mushroom remains to be visually confirmed.
+
+Latest Jev quick review: build check passed; 6 of 45 changed fragments reviewed,
+0 flagged, 6 uncertain, 40 deferred (budget held), 4 static-only files; loader
+CSS also remains a parser-deferred file from earlier pass. Sampled uncertainties
+in UI styles were checked in desktop/mobile Chromium; mushroom stream/focus
+functions received a focused elevated-mushroom fixture. No confirmed issue.
+This review is incomplete. Local app is open at http://127.0.0.1:5177/; no
+commit, push or deployment was requested.
+
+Latest startup behavior: visual transition no longer waits for Sound On. Once the
+scene is ready and the title reveal has finished, the dust sweep starts
+automatically. Sound On remains visible during the reveal/particle composition,
+but is no longer required to click; App attempts the entrance audio ramp after
+the automatic transition and browser interaction can unlock it if autoplay is
+blocked. Readiness and reduced-motion paths remain separate.
+
+Current task: sequential startup exit. After the scene and six-second title
+reveal are ready, a top-to-bottom sweep erases the DOM content into drifting
+gold dust. Preserve intact lower text until the sweep reaches it. After dust
+clears, start a 2.2-second audio entrance ramp and fade the black overlay into
+the prepared Forest; enable walking/controls after overlay removal. Reduced
+motion uses a short fade. Implementation and local verification are complete;
+audio readiness does not block the automatic visual transition.
+
+Startup reveal: VESTIGE now fades from transparent/18px blur into crisp letters
+over 4.8 seconds on page open/reload. CSS animation does not gate scene generation
+or audio readiness; Sound On behavior is preserved. Reduced-motion preference
+shows the title immediately. Browser sampling confirms progressive opacity/blur,
+clear final state and restart on reload. No animation JavaScript added.
+
+Reveal refinement: user requested much stronger blur as the main effect. Updated
+to 6 seconds: opacity reaches 1 in the first 720ms while blur remains 56px,
+then blur gradually resolves through 40px, 22px and 8px to sharp letters.
+
+Sound label refinement: matches the tagline font size (16px desktop, 13px tablet,
+12px mobile/short landscape). Before click the letters use subtle varied warm
+gold shades, preserving the blinking prompt. Post-click shimmer remains. Browser
+checks confirm matching sizes and blink at desktop/mobile widths.
+
+Lines/orbit reveal: horizontal and vertical lines grow from the center; SVG circle
+draws its contour using normalized dashoffset. All use the same 6-second duration
+as VESTIGE. User clarification: lines/orbit must have no animated blur or opacity;
+only title has blur/fade. Removed these from line/orbit keyframes; endpoint glints
+appear when the contour completes. Reduced motion shows full geometry instantly.
+
+Validation: build passed; desktop/mobile samples and screenshots show growing
+sharp lines and partial sharp circle (opacity 1, filter none) while title is
+blurred. At six seconds transforms/dashoffset reach completion. Reduced motion
+and sound/scene gating passed. Jev recheck: 0 flagged, 1 uncertain HTML fragment,
+1 deferred CSS parser blocker, 4 static-only files; investigated against loader
+selectors, SVG rendering and browser checks, no confirmed defect. Review remains
+incomplete. Changes local only; user visual evaluation is next.
+
+Automatic startup validation (2026-10-07): isolated normal/reduced-motion tests
+confirmed no transition before scene readiness and automatic reveal/completion
+without clicking Sound On. Real Chromium WebGL entered walk without a click;
+screenshot confirms visible Forest, and no JavaScript errors occurred. During
+dust audio stays inactive at zero entrance gain; during the background fade it
+ramps from silence to full entrance gain over 2.2 seconds. Browser autoplay
+policy may defer sound until the first interaction, without delaying the scene.
+Escape shows centered gold serif CONTINUE; clicking it resumes walking, and it
+stays hidden over About. Production build and git diff --check passed.
+
+Final bounded Jev recheck: production-build passed; 61 changed chunks,
+4 newly reviewed and 11 cached, 0 flagged, 15 uncertain, 47 deferred including
+the loader CSS parser blocker, and 4 static-only files (README, this state file,
+font and license). The 20-request pass budget is exhausted. Uncertain loader,
+App and audio fragments were investigated against complete source/callers and
+readiness, no-click, audio-ramp, pause and reduced-motion tests; no confirmed
+defect. CSS was inspected manually and in browser screenshots. Classifier
+coverage remains incomplete; this is not a clean review. Native WebGPU and the
+exact in-situ tall-mushroom view remain unverified. Local changes are uncommitted.
+Next action: user visual evaluation at http://127.0.0.1:5177/.
+
+Current follow-up: show only the central title and drawing geometry initially.
+After their six-second reveal, fade/resolve the kicker, tagline and SOUND ON
+from blur over 2.4 seconds. Automatic dust exit must wait for this second phase
+and scene readiness; reduced motion shows all text immediately. Implementation
+updated in loader CSS and readiness event; browser validation pending.
+
+Follow-up completed: desktop/mobile controlled animation samples confirm
+kicker/tagline/SOUND ON opacity 0 and visibility hidden through the first six
+seconds, then blur/opacity reveal together after the title is sharp. Dust waits
+until that reveal finishes. Normal/reduced-motion no-click completion tests
+passed; optional sound unlock/shimmer preserves the copy reveal. Real WebGL
+entered walk automatically with no page errors. Production build and
+git diff --check passed. One initial timing-dependent browser assertion missed
+the animation window under load; controlled Web Animations sampling verified
+the sequence without that race. A real-world test initially hit Playwright's
+default 30s timeout; corrected explicit 90s timeout completed successfully.
+Screenshots inspected at desktop/mobile widths. Local server remains on 5177.
+
+Follow-up Jev quick review: production-build passed, 6 reviewed chunks,
+0 flagged, 6 uncertain, 56 deferred (including CSS parser blocker), 4 static-only
+files. All six uncertain App/loader locations were investigated against full
+source, CSS timing, scene readiness and browser checks; no confirmed issue.
+49 omitted attention entries are deferred; no extra flagged/uncertain entries
+were omitted. Review remains partial; excluded font/license/documentation are
+not API-reviewed. No publication performed. Next: user visual evaluation.
