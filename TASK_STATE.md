@@ -96,5 +96,7 @@ GitHub; remote main matched `d6f110a8fa7fae98e2a991890d3448e001d2c779`.
 Follow-up: independent investigation of Jev's uncertain App fragments found
 that keyboard movement could resume walking behind the About dialog. Controller
 input and the walk action are now gated while About is open. Build passes;
-browser interaction check is running. Commit and push this follow-up before
-handing control back.
+browser interaction check confirmed About pauses, arrow keys leave it paused,
+and Escape closes About and resumes walking. Follow-up commit `0d8adbd` was
+pushed to origin/main. Git working tree clean; remote main should be verified
+against that commit.
