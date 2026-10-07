@@ -6,7 +6,13 @@ type Voice=Loop&{panner:PannerNode;output:GainNode;id?:number;distance:number;le
 type Graph={context:AudioContext;space:ConvolverNode;master:GainNode;entrance:GainNode;entranceStarted:boolean;analyser:AnalyserNode;bed:Loop;voices:Voice[];timer:number}
 
 const BACKGROUND_GAIN=.10
-export const MUSHROOM_TRACKS=['/audio/mushroom-1.m4a','/audio/mushroom-2.m4a','/audio/mushroom-3.m4a','/audio/mushroom-4.m4a','/audio/mushroom-5.m4a','/audio/mushroom-6.m4a','/audio/mushroom-7.m4a','/audio/mushroom-8.m4a']
+const PROXIMITY_INTERVAL=1/20
+export const MUSHROOM_TRACKS=[
+ '/audio/mushroom-1.m4a','/audio/mushroom-2.m4a','/audio/mushroom-3.m4a','/audio/mushroom-4.m4a',
+ '/audio/mushroom-5.m4a','/audio/mushroom-6.m4a','/audio/mushroom-7.m4a','/audio/mushroom-8.m4a',
+ '/audio/s001.mp3','/audio/s002.mp3','/audio/s003.mp3','/audio/s004.mp3','/audio/s005.mp3',
+ '/audio/s006.mp3','/audio/s007.mp3','/audio/s008.mp3','/audio/s009.mp3','/audio/s0010.mp3','/audio/s0011.mp3',
+]
 
 export class WorldAudio {
  private graph?:Graph
@@ -15,8 +21,9 @@ export class WorldAudio {
  private abort=new AbortController()
  private loaded=new Map<string,Promise<AudioBuffer>>()
  private mushrooms:MushroomSound[]=[]
+ private nextProximityAt=0
 
- setMushrooms(mushrooms:MushroomSound[]){this.mushrooms=mushrooms}
+ setMushrooms(mushrooms:MushroomSound[]){this.mushrooms=mushrooms;this.nextProximityAt=0}
 
  private create(unlockedContext?:AudioContext){
   if(this.graph)return this.graph
@@ -85,6 +92,7 @@ export class WorldAudio {
 
  async start(fadeIn=0){
   if(this.disposed)return
+  if(!this.active)this.nextProximityAt=0
   this.active=true;await this.prepare();const g=this.graph;if(!g||!this.active)return
   if(g.bed.sources.size===0)this.schedule(g,g.bed,g.context.currentTime+.05)
   if(!g.entranceStarted){
@@ -95,6 +103,7 @@ export class WorldAudio {
  }
 
  setActive(active:boolean){
+  if(active&&!this.active)this.nextProximityAt=0
   this.active=active;const g=this.graph;if(!g)return
   if(active)void g.context.resume().catch(()=>undefined)
   else {g.master.gain.setTargetAtTime(0,g.context.currentTime,.12);void g.context.suspend().catch(()=>undefined)}
@@ -108,6 +117,11 @@ export class WorldAudio {
    listener.forwardX.setValueAtTime(forward.x,now);listener.forwardY.setValueAtTime(forward.y,now);listener.forwardZ.setValueAtTime(forward.z,now)
    listener.upX.setValueAtTime(0,now);listener.upY.setValueAtTime(1,now);listener.upZ.setValueAtTime(0,now)
   }else{listener.setPosition(position.x,position.y,position.z);listener.setOrientation(forward.x,forward.y,forward.z,0,1,0)}
+  g.master.gain.setTargetAtTime(1,now,.3)
+  // Keep camera/listener direction responsive; let Web Audio smooth mushroom
+  // gains and positions between the less frequent proximity calculations.
+  if(now<this.nextProximityAt)return
+  this.nextProximityAt=now+PROXIMITY_INTERVAL
   const closest=MUSHROOM_TRACKS.map((_,track)=>{
    let best:{mushroom:MushroomSound;y:number;distance:number;weight:number}|undefined
    for(const mushroom of this.mushrooms){
@@ -125,7 +139,6 @@ export class WorldAudio {
    voice.output.gain.setTargetAtTime(level,now,.35)
    if(best){const p=voice.panner,[x,,z]=best.mushroom.position;if(p.positionX){p.positionX.setTargetAtTime(x,now,.2);p.positionY.setTargetAtTime(best.y,now,.2);p.positionZ.setTargetAtTime(z,now,.2)}else p.setPosition(x,best.y,z)}
   }
-  g.master.gain.setTargetAtTime(1,now,.3)
  }
 
  info(){

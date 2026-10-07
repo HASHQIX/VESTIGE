@@ -3,6 +3,11 @@
   "profiles": [],
   "checks": [
     {
+      "name": "guide-selection-regression",
+      "cwd": ".",
+      "argv": ["npm", "run", "test:guides"]
+    },
+    {
       "name": "production-build",
       "cwd": ".",
       "argv": [

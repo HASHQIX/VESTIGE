@@ -114,9 +114,19 @@ function assembleForest(payload:ForestPayload,worker:boolean) {
   }
   const start=stops[0].view
   const firstMushroom=layout.mushrooms.reduce((closest,m)=>Math.hypot(m.x-start[0],m.z-start[2])<Math.hypot(closest.x-start[0],closest.z-start[2])?m:closest)
-  const soundRandom=seeded(83071),mushroomSounds=layout.mushrooms.map(m=>{
-   const randomTrack=Math.floor(soundRandom()*(MUSHROOM_TRACKS.length-1)),track=randomTrack>=5?randomTrack+1:randomTrack,isFirst=m.id===firstMushroom.id
-   return {id:m.id,track:isFirst?5:track,position:[m.x,(m.base??forestFloor(m.x,m.z))+1.2,m.z] as Point,height:m.height,range:isFirst?22:9+Math.min(8,m.radius)}
+  const soundRandom=seeded(83071),soundTracks:number[]=[]
+  const nextSoundTrack=()=>{
+   // Shuffle a complete set so every old and new recording appears in the world.
+   // Jiangpu Road 9 stays reserved for the mushroom at the starting point.
+   if(!soundTracks.length){
+    for(let track=0;track<MUSHROOM_TRACKS.length;track++)if(track!==5)soundTracks.push(track)
+    for(let i=soundTracks.length-1;i>0;i--){const j=Math.floor(soundRandom()*(i+1));[soundTracks[i],soundTracks[j]]=[soundTracks[j],soundTracks[i]]}
+   }
+   return soundTracks.pop()!
+  }
+  const mushroomSounds=layout.mushrooms.map(m=>{
+   const isFirst=m.id===firstMushroom.id
+   return {id:m.id,track:isFirst?5:nextSoundTrack(),position:[m.x,(m.base??forestFloor(m.x,m.z))+1.2,m.z] as Point,height:m.height,range:isFirst?22:9+Math.min(8,m.radius)}
   })
   let streamDispose=()=>{}
   return {mushroomSounds,study:payload.fullStudy?{complete:true,groundPaths:payload.ground?.buffers.paths??0,organicPaths:matter?.buffers.paths??0,cache:payload.studyCache}:undefined,fullStudy:!!payload.fullStudy,interaction,preview,attachStreamDisposer:(dispose:()=>void)=>{streamDispose=dispose},streaming:undefined as ForestStreaming|undefined,requestFrame:undefined as (()=>void)|undefined,matterMeshes,matterRevision:0,initialStreamPatch,addStreamPatch,removeStreamPatch,reseedDust,setWalkingPatches:(patches:ForestPatch[])=>{walkers=patches.map(p=>p.walking)},group,chunks,resources,filaments,fragments,dust,tracers,matterCamera,geometry,material,rootGeometry:chunks[0].body,rootMaterial,sporeGeometry,sporeMaterial,uniforms,colliders,decks,stops,route,bounds:layout.bounds,supportHeight,surfaceHeight:(x:number,z:number,near:number)=>findSurfaceHeight(volume,x,z,near),volumeField:(x:number,y:number,z:number)=>volume.field(new THREE.Vector3(x,y,z)),components:payload.components,elevatedMushrooms:payload.elevatedMushrooms,arches:layout.bridges.filter(b=>b.arch).length,mushrooms:layout.mushrooms.length,clock:0,sway:HL.spring(0),

@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5177 --strictPort",
+    "test:guides": "node scripts/test-world-guide-atlas.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 5177 --strictPort"
   },

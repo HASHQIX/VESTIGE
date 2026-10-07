@@ -223,12 +223,15 @@ export function matter0(bindings) {
 
 		const base = current.sample( uv0 ).rgb.toVar();
 		const s = surface( uv0 ).toVar();
-		const f = flowAt( uv0, s.b ).toVar();
 		const light = vec3( 0. ).toVar();
 
-		If( s.b.greaterThan( .05 ).and( f.b.greaterThan( .05 ) ).and( flowLength.greaterThan( .01 ) ), () => {
+		// Match the WebGL pass: do not sample flow for empty background.
+		If( s.b.greaterThan( .05 ).and( flowLength.greaterThan( .01 ) ), () => {
 
-			light.assign( integrate( uv0, f, 1. ).add( integrate( uv0, f, - 1. ) ).mul( .5 ) );
+			const f = flowAt( uv0, s.b ).toVar();
+			If( f.b.greaterThan( .05 ), () => {
+				light.assign( integrate( uv0, f, 1. ).add( integrate( uv0, f, - 1. ) ).mul( .5 ) );
+			} );
 
 		} );
 

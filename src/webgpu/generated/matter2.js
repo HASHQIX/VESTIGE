@@ -125,10 +125,10 @@ export function matter2(bindings) {
 		const v = clamp( s.rg.mul( velocityScale ).mul( trail ), vec2( - .025 ), vec2( .025 ) ).toVar();
 		const sum = vec3( 0. ).toVar();
 		const weights = float(0.).toVar();
-		const materialFlow = flowAt( uv0, s.b ).toVar();
-		const variation = add( .3, mul( 1.5, materialFlow.a ) ).toVar();
 
 		If( s.b.greaterThan( .05 ), () => {
+			const materialFlow = flowAt( uv0, s.b ).toVar();
+			const variation = add( .3, mul( 1.5, materialFlow.a ) ).toVar();
 
 			Loop( 12, ( { i } ) => {
 

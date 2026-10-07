@@ -359,3 +359,385 @@ by active/context checks; no additional confirmed defect. Review is partial.
 User authorized committing and pushing this update to origin/main as
 Anatoli Shumer <shumerhere@gmail.com>. Production build and diff checks passed
 again before publication. No further star visibility changes were requested.
+
+## CPU optimization, stage 1 (local)
+
+Objective: reduce repeated native WebGPU scene/material bookkeeping without
+changing rendering settings. User requests one stage at a time, with a manual
+local check before proceeding to any later stage.
+Acceptance: discover graph materials only initially/on matterRevision changes;
+sync current uniforms once per frame, including preview gain/resolution before
+its render; preserve streamed additions/removals, pause/resume and image settings.
+Completed: split graph discovery from uniform sync in ForestWebGPU. Discovery
+runs at initialization/on matterRevision changes. Preview gain/resolution are
+prepared before the single per-frame sync. No rendering/audio settings changed.
+Validation: Jev production-build and git diff --check passed. Native WebGPU
+Playwright (Metal enabled in headless Chromium, 1000x650) entered walk without
+errors. Runtime-only instrumentation: baseline 1,325 discoveries/662 frames;
+optimized 3/680 frames, 5,188 uniform syncs vs baseline 10,085. Existing profiler
+materials block mean: 0.0292 ms baseline, 0.0088 ms optimized. This is a small
+isolated CPU cost, not evidence of a large overall CPU/FPS/temperature gain;
+baseline's second sync is outside that profiler block. Diagnostic JSON/screenshots
+are in /tmp/vestige-stage1-{baseline,optimized}.json and stage1-native.png.
+Native movement test traveled 34.6 units via W/ArrowRight, loaded 6 patches,
+evicted 2, ended with 4 cached/2 visible patches and no pending builds/errors;
+GPU history probe finite with 32 valid samples. Pause/CONTINUE/resume and resize
+passed. Bloom remains screen/one-third scale and filament density preserved.
+Jev: 4/4 eligible fragments reviewed, 0 flagged, 4 uncertain, 0 deferred;
+TASK_STATE.md is the sole static-only exclusion. Investigated all four fragments
+against full component, nodeMaterial initial sync, streaming refresh/add/remove
+callers and runtime tests: streaming completes mutations and increments revision
+in one synchronous callback; cached graphs still sync every frame; preview
+uniform writes are before sync and no later source writes occur before its draw;
+dispose listeners/cache cleanup remain intact. No confirmed defect; model ledger
+retains uncertainty, so this is not a clean/complete Jev verdict.
+Remaining: user visual/load review at http://127.0.0.1:5177/. Stop here until the
+user replies; do not start stage 2 or publish stage 1. Changes are local only.
+
+## Intro click captures camera (local)
+
+Objective: one click anywhere on the greeting, including during loading,
+prepares audio and captures the pointer; after the automatic intro, camera
+control works without another click. Do not start CPU optimization stage 2
+or publish these changes before the user's local check.
+Completed: loader requests lock on persistent #root synchronously from click,
+accepts clicks through dust/fade, and removes its listener on dismissal.
+Controller uses that root and adopts an existing lock even if captured before
+React/canvas initialization. Mouse rotation is gated to enabled walk mode;
+App's lock callback uses the existing guarded walk action, preserving intro.
+Audio activation is shared with the anywhere click; failed/unsupported lock
+keeps audio/automatic entry functional. Error reload remains independent.
+Validation: production build and diff check passed. Runtime browser checks
+and Jev investigation are in progress.
+Next action: verify early capture, transition, ESC/CONTINUE, SOUND ON,
+no-click entry and rejection fallback; then user checks localhost:5177.
+
+Intro capture update: user verified actual mouse capture and entry locally,
+reported everything works, and explicitly requested no further capture tests.
+Stopped browser investigation. Automated native-lock attempt was rejected by
+Chromium with 'root document ... not valid for pointer lock', also reproduced
+in isolated minimal pages; do not claim an automated native pointer-lock pass.
+User's actual browser check confirms the requested interaction. Build/diff checks
+passed. Next proposed CPU stage: reduce spatial-audio proximity/AudioParam updates
+currently done every animation frame; implementation awaits agreed next-stage
+scope. No stage 2 changes made; no commit/push requested.
+
+Jev follow-up: production-build passed; 6/14 changed fragments reviewed,
+0 flagged, 6 uncertain, 8 deferred, 1 static-only exclusion (TASK_STATE.md).
+Both omitted attention entries are deferred. Investigated all reviewed uncertain
+fragments against full App/loader/controller source, installed Three control
+constructor/event behavior, cached audio prepare/load guards and stage-1 graph
+sync source. Persistent root remains connected; constructor's initially false
+isLocked is explicitly adopted; enabled gating and guarded App walk preserve
+intro and About; document listener is removed before overlay removal/completion;
+failed load exits activation early; audio loads are cached and guarded against
+duplicate assignment. Stage-1 invariants were already runtime-verified. No
+confirmed additional defect. Review remains partial and model uncertainties
+remain; do not describe it as clean or complete. User capture check is the actual
+interaction validation; automated native pointer lock remains unverified.
+Ready for user's first-stage load/image check. No stage 2 implementation or
+publication performed. Local server responds HTTP 200 on 5177.
+
+## CPU optimization, stage 2 (local, active)
+
+User authorized continuing to stage 2 after confirming intro capture. Objective:
+reduce per-frame mushroom proximity/source updates without changing visuals or
+listener direction responsiveness. Acceptance: cap mushroom voice calculations
+at 20 Hz, preserve existing smooth gain/panner transitions and overlapping loops,
+recalculate immediately after resume or mushroom reassignment. Keep listener
+pose updates at frame cadence. Compare before/after CPU work and behavior; leave
+local server ready and wait for user evaluation before stage 3 or publication.
+Baseline source saved at /tmp/vestige-stage2-audio-before.ts. Implementation and
+validation pending. Next: implement bounded proximity throttle and validate.
+
+Stage 2 implemented in src/audio.ts only: mushroom/source calculations gated by
+AudioContext.currentTime at a maximum 20 Hz. Listener pose and master ramp stay
+at frame cadence; existing 0.35s gain smoothing, 0.2s source-position smoothing,
+source selection, 5s mushroom/10s bed overlaps and audio settings preserved.
+Reset gate on inactive-to-active start/setActive and mushroom reassignment.
+Validation: build/diff passed. Deterministic 71-mushroom, 15s/120Hz moving-route
+comparison performs 289 proximity updates vs 1800; voice identity/distance/level
+match baseline exactly at each processed sample, at most 2 selected voices,
+resume/reassignment refresh at unchanged audio clock. Listener updates equal
+through the measured route (the optimized test also makes 2 reset probes).
+Instant target differences during track switching can reach 0.34; real Web Audio
+OfflineAudioContext test of 8 automated gain envelopes verifies smooth samples
+(max step 0.0000454 at 48kHz). Max baseline/optimized envelope difference 0.0414,
+mean 0.00127; not proof of perceptual equivalence, user listening required.
+Native WebGPU 1000x650, same W/ArrowRight route for 12s: baseline 718 update calls,
+718 proximity calculations, audio CPU 1.7148ms/s; optimized 719 calls,
+209 proximity calculations, audio CPU 0.9493ms/s (about 45% lower in that isolated
+block; about 0.77ms/s saved, not a claim of large overall CPU reduction).
+Both loaded all recordings, had nonzero RMS, at most two audible selected voices,
+and passed pause/suspended/resume/running checks with no page errors. No further
+mouse capture checks were run. Artifacts: /tmp/vestige-stage2-{baseline,optimized,
+behavior,envelope}.json, /tmp/vestige-stage2-native.png; temporary scripts under
+/tmp only. Existing baseline/current native-renderer visual/audio settings held
+constant; no visual source changes in this stage. Jev review pending.
+
+Stage 2 Jev: initial quick page plus one bounded continuation reviewed 12/19
+fragments (continuation 6 new + 6 cached), 0 flagged, 12 uncertain, 7 deferred;
+TASK_STATE.md is sole static-only exclusion. Summary omissions inspected in
+checkpoint, including all 4 changed WorldAudio fragments. Constant fragment
+PROXIMITY_INTERVAL is deferred and inspected manually (1/20 seconds).
+Investigated uncertainties against complete audio/controller/App/loader sources,
+existing control event contracts and earlier stage-1 validation. Audio time is
+monotonic within the graph, frozen pause clock reset by start/setActive;
+setMushrooms resets assignment immediately; running/active guards remain before
+listener/voice updates; listener/master remain before throttle return. Existing
+gain/panner smoothing and loop scheduler continue independently of proximity
+sampling (no timer/catch-up loop introduced). Real offline envelopes and native
+route/reset tests substantiate partial-update behavior. Earlier controller,
+App, loader and graph uncertainties remain investigated as documented above;
+no new confirmed defect. Model uncertainty remains; review is partial, not clean.
+Final validation: configured production-build passed; no stage-2 image settings
+changed. Stage 2 ready locally; user should reload http://127.0.0.1:5177/ to create
+the new audio instance, walk among mushrooms and listen to approach/retreat and
+turn responsiveness. Stop now for user check before stage 3. No commit/push.
+
+## Next optimization analysis (2026-10-07, no implementation)
+
+User asks for discussion of substantial load reduction without visible degradation.
+Read-only native WebGPU CPU sampling on localhost:5177, 1000x650, 10s stationary
+then 10s KeyW route; no pointer capture tests. Profiles/snapshots saved in
+/tmp/vestige-next-{idle,moving}-{cpu,snapshot}.json; temporary script
+/tmp/vestige-next-cpu-profile.mjs. No page errors. Main-thread inclusive samples:
+idle total10154ms, non-idle1364ms, player physics86ms, renderer559ms;
+moving total10043ms, non-idle1271ms, WorldGuideAtlas260ms, player physics83ms,
+renderer418ms. Sampling is approximate, includes instrumentation/debug/browser
+work; not GPU timings or whole-browser CPU usage. Atlas ~20% of moving main-thread
+non-idle time, ~26ms/s; not a guaranteed total load improvement.
+WorldGuideAtlas.select already skips until 4m movement / .2rad view turn / pending
+retry, but when triggered scans 5 samples of every guide, allocates records and
+sorts entire source before radius filtering. Recommended next CPU stage: bounded
+spatial candidate lookup / filtering before ranking, preserving exact selected
+IDs/order, no fewer visible particles, stable slots and 3.1s lifetime guard.
+Spatial acceleration exists already for collision SDF (7m grid) and support (2m
+grid), so don't present those as absent. Grounded idle physics exact cache/fast
+path is secondary. Larger potential render/GPU stage: auxiliary passes and flow
+shader efficiency, but no valid GPU timings yet; don't promise large wins or
+unchanged visuals without matched captures. Bloom already1/3 resolution;
+temporal internal targets already75%. No new coding, build, Jev, commit/push.
+Await explicit stage-3 implementation request; keep stage-by-stage user check.
+
+## CPU optimization stage 3 (2026-10-07, local)
+
+Authorized: optimize light guide selection, preserving exact selected guides/order,
+particle counts, visual settings, stable GPU slots and lifetime safety. Complete
+one stage only; user evaluates localhost before further optimizations/publication.
+Acceptance: compare old/new selection and full slot state on deterministic routes,
+turns, source replacements, retries, clock reset, empty/fallback/boundary cases;
+measure selection CPU on same captured world inputs and native movement route;
+production build, diff check and bounded Jev with signal investigation.
+Baseline saved /tmp/vestige-stage3-atlas-before.ts. No commit/push authorization.
+Next: implement bounded candidate index with identical ranking/fallback behavior.
+
+Stage 3 implemented in WorldGuideAtlas only for runtime: lazily build a 32m-cell
+3D index of the same five ranking samples per guide. Query cells intersecting the
+original 65m/32m radius, deduplicate rows, rank with the unchanged visibility and
+distance calculation, filter before sorting, and explicitly break ties by source
+row to preserve stable source order. Empty shortlist uses a full-scan minimum
+with the original ranking; source replacement invalidates index. Existing gates,
+slot ownership, 3.1s lifetime protection, pending retries and clock-reset rules
+unchanged. Added npm test:guides and Jev deterministic regression check.
+Validation: 1096 old/new state comparisons (including full data, slots, indices,
+lastUsed, pending, result) on movement/turns/clock reset/replacements, empty,
+zero-capacity, ties and cutoff cases matched exactly. Persistent regression test
+matches independent full-scan oracle in 97 cases and covers replacement/lifetime/
+retry/reset. Production build and regression checks passed (Jev stage0 twice).
+Real captured 21944-guide dataset, 80 queries, 64 actual selections, 5 alternating
+runs: median old770.185ms vs new331.816ms, 56.9% reduction including lazy index
+build. First query index cost15-22ms vs old11-13ms; extra one-time work amortized
+across selections, not a guarantee of fewer hitches for every source update.
+Native WebGPU 16s W/ArrowRight route: old960calls/37selections/397.7ms;
+new953calls/32selections/260ms; no page errors, 8192 particles and64 history/render
+samples preserved. Independent runs differ in source replacement timing; use
+matched-input benchmark for improvement claim. Optimized screenshot inspected:
+scene, glow and trails present. Files /tmp/vestige-stage3-{baseline,optimized}-
+{runtime.json,native.png}, source.{bin,json}, equivalence.json, benchmark.json.
+
+Jev deep + bounded continuation: 26/47 final eligible fragments covered (16 new,
+10 cached in second pass); 0 flagged,26 uncertain,21 deferred,2 static-only files
+(.jev/project.json and TASK_STATE.md). All3 changed WorldGuideAtlas chunks were
+reviewed; constants/type/comparator deferred and inspected manually. Model
+uncertainties independently investigated using full class, immutable guide-source
+replacement caller, streaming source generation, complete regression/oracle and
+1096 reference comparisons. Culling uses exact indexed samples; every eligible
+sample's cell intersects query sphere; ranking still checks all5 samples;
+source-order ties explicit; index changes only after replacement; slot lifetime
+state demonstrated unchanged. Covered test uncertainties refer to isolated
+imports/assertions lacking fixture context; investigated complete script and
+passing runner. Prior loader/App/controller/audio/WebGPU uncertainties verified
+against full relevant source and earlier documented runtime tests (no additional
+pointer capture tests). No confirmed defect; advisory coverage remains partial.
+Reports /tmp/vestige-stage3-jev{,-continued}.json; checkpoint same repository.
+Additional paired native oracle/timing validation in progress. No commit/push.
+
+Stage 3 final paired native validation: baseline and optimized atlases evaluated
+side by side on identical live source replacements, positions, directions and
+clocks during one WebGPU launch. 1742 calls compared (including intro), zero
+result/selected/owner/lastUsed/pending mismatches; no page errors. Measured16s
+route959calls/33selections: old358.8ms vs new258.5ms (28.0% reduction for this CPU
+block, ~6.3ms CPU/s saved; not whole-app CPU/GPU reduction). First/build costs
+included in select. Particle/history/render counts8192/64/64 unchanged.
+/tmp/vestige-stage3-paired-runtime.json and paired-native.png are final matched
+runtime evidence; /tmp/vestige-stage3-paired.mjs is temporary instrumentation,
+not shipped. Invalid earlier test harness data-URL relative import was corrected;
+no app source fix needed. Local serverHTTP200 at5177, app files contain new atlas.
+Completion: stage3 implementation, equivalence, CPU measurements, regression,
+production build and advisory signal investigation done. Pause further stages
+for user's local walkthrough/image assessment. Next: user reloads5177 and checks
+movement, particles/trails and perceived performance. No commit/push performed.
+
+## Shader optimization stage 4 (2026-10-07, local, active)
+
+Authorized: skip light-effect calculations that cannot affect output. One stage
+only, preserve graphic settings/sample counts/density; no publication. Shader
+changes must match both WebGL GLSL and native WebGPU TSL factories. Acceptance:
+matched old/new GPU output on synthetic boundary/history/motion inputs and live
+scene inputs, native timing on identical workload, fallback compile/runtime,
+build and guide regression, bounded Jev and signal investigation. Baselines
+saved /tmp/vestige-stage4-{MatterCameraPass.ts,matter0.js,matter1.js,matter2.js}.
+Next: branch flow sampling on valid surfaces and feedback neighborhood on valid
+history; verify actual shaders rather than animation screenshots.
+
+Stage 4 implemented: GLSL MatterCameraPass and native generated matter0/1/2
+shaderMain now guard flow sampling with the existing valid-surface condition;
+flowSmear also guards with the original flowLength cutoff. Feedback keeps current
+color until history passes the unchanged validity test, then executes unchanged
+3x3 bounding and accumulation. Final HDR clamp/depth and motion output expression
+preserved. No helper math, sample counts, resolutions, particles, settings,
+bloom, physics or intro changes. Generated factories patched directly because
+standalone repository has no generator; native depth/Y adaptations preserved.
+
+GPU equivalence: temporary /tmp/vestige-stage4-gpu.mjs compiled/rendered old and
+new versions on identical float textures in native WebGPU and WebGL. 54 pass/case
+comparisons (9 inputs x3 passes x2 backends), all half-float output values identical
+and finite. Cases: empty, dense, sparse, exact .05/near thresholds, offscreen
+reprojection, guard boundary, zero history, depth reconstruction, disabled flow.
+Reports /tmp/vestige-stage4-{webgpu,webgl}-gpu.json.
+Native scene validation /tmp/vestige-stage4-live.mjs froze actual scene inputs
+for all3 temporal passes on stationary and moving captures (1000x650 viewport;
+750x488 first2 pass targets). Old/new renders per pass matched exactly in all6
+comparisons, no nonfinite output or console/page errors. Measured GPU timestamps
+with one draw per resolve, alternating old/new, 4warmup rounds then26 samples,
+without changing shader inputs. Stationary medians (ms): flow1.890346->1.758515,
+feedback.056707->.052499, motion.188705->.180623; summed2.135758->1.991637
+(6.75%, .144121ms). Moving medians:1.494102->1.427186, .058707->.055208,
+.217537->.199164; summed1.770346->1.681558 (5.02%, .088788ms). Sum of per-pass
+medians is an isolated estimate, not total frame time/CPU reduction. Synthetic
+dense flow case regressed ~2.35%; benefit depends on scene composition and GPU.
+Three timestamp pool source checked: resolve returns last recorded frame sum;
+our single-draw samples avoid misattribution from app-level profiler batches.
+Runtime harness had two polling timeouts because its own rAF freeze prevented
+Playwright's default rAF poll; corrected to50ms polling, not an app error.
+Fallback WebGL full intro and3s walking completed with no errors. Native/fallback
+screenshots inspected: forest/glow/trails present; fallback has existing square
+point appearance (sky rendering not modified in this stage). Artifacts
+/tmp/vestige-stage4-{stationary,moving,webgl}-live.{json,png}.
+
+Jev bounded deep + continuation20 + final bounded8:36/50 final eligible fragments
+covered,1 flagged,36 uncertain,14 deferred,5 static-only files (.jev config,
+TASK_STATE,3generated factories). Production build and guide regression passed
+in each pass; git diff --check passed. Reports /tmp/vestige-stage4-jev{,-continued,
+-last}.json. Flag in preexisting ForestWebGPU cache part2 (88-105) investigated:
+streaming refresh increments matterRevision after presentation/add/remove,
+refreshMaterials discovers/removes graphs and velocity sources before rendering;
+syncMaterials still updates every cached graph every frame. Preview gain and
+resolution now set before that sync. Read full render class, forestStreaming
+refresh/updateReveal, forest add/remove, NodeMaterials bindings, ForestEffects,
+and earlier paired runtime evidence; no confirmed regression. Other uncertain
+locations investigated against full loader/App/controller/audio/atlas/test code:
+listener remains per-frame, proximity uses context clock and reset on reactivation/
+mushroom replacement; sources update streaming revision; oracle and lifetime
+fixtures independently verify guide selection. Prior mouse capture user-verified,
+not tested again. Current GLSL constants remain deferred by API, native factories
+excluded; all4 edited shader files manually inspected and GPU-tested. Advisory
+review coverage is partial, not a clean/complete review. No confirmed defect.
+
+Completion: authorized stage4 implementation, matched GPU outputs, native timing,
+fallback smoke, build/regression and advisory investigation done. Local server
+HTTP200 at5177. No commit/push. Stop further optimization for user's local
+visual/load assessment. Next action: user reloads http://127.0.0.1:5177/ and checks
+light appearance and movement before authorizing another stage.
+
+## Additional mushroom audio (2026-10-07, local, active)
+
+Authorized: add11 user-supplied Downloads/s001.mp3 through s009.mp3, s0010.mp3
+and s0011.mp3 alongside existing8 mushroom tracks. Distribute recordings across
+mushrooms in mixed random order with coverage for every track. Preserve first
+mushroom Jiangpu Road9 (index5), background bed, proximity gain, two audible
+voices and5second overlapping loops. No publication or next optimization stage.
+Acceptance: copied assets match originals, all19 tracks decode over localhost;
+world assignment covers all with first-mushroom override; approach old/new sound
+mushrooms and verify playback/proximity. Production build and bounded review.
+All11 sources exist, stereo48kHz MP3,12.6-18.8s; copied unchanged to public/audio.
+Next: expand catalog, balanced seeded shuffle distribution, local validation.
+
+Additional audio completed locally: catalog now19 mushroom recordings. Forest
+assignment draws seeded Fisher-Yates shuffled batches of all18 non-start tracks,
+refilling after each complete set; first mushroom id56 keeps Jiangpu Road9 index5.
+Runtime scene71 mushrooms uses every track; counts4 for most,3 for new tracks
+indices8 and10,1 reserved start. All11 copied originals match byte-for-byte and
+HTTP-served bytes; total new3,710,179bytes. Existing scheduling/proximity/background
+code unchanged. /tmp/vestige-audio19-check.mjs and .json: all19 decoded and played
+in live native WebGPU application, near/mid/far levels.45/.225/0, far voice stops,
+new MP3 loop has5s overlap with2simultaneous sources. Complete18-track batches
+unique; no page errors/request failures; first override and all-track coverage
+asserted. No pointer capture tests. Production build and guide regression passed
+through Jev stage0; git diff check passed. No commit/push.
+Jev quick bounded8:6/55 eligible covered,0 flagged,6 uncertain investigated using
+full controller/App/audio/render source and prior matched runtime evidence,
+49 deferred,16 static-only (.jev config,state,3generated factories,11MP3 files).
+New catalog/assignment API coverage deferred; manually inspected deterministic
+shuffle bounds, refill, exclusion of5, stable seed and nonempty18track pool,
+plus real-world coverage/playback assertions. No confirmed defect; advisory
+coverage partial, not complete. /tmp/vestige-audio19-jev.json.
+
+User follow-up audio size audit (read-only, no compression authorized): current
+20 audio assets total15,804,802bytes. Background sound.mp3 largest6,777,879bytes,
+282.4s,192kbps stereo44.1kHz. Existing8mushroom AAC files total5,316,744bytes,
+individual0.35-1.19MB, mostly63-66kbps mono (mushroom7 ~82kbps). New11MP3 total
+3,710,179bytes,individual.27-.44MB,12.6-18.8s,stereo48kHz variable129-186kbps
+(audio-stream rates; file rates include attached artwork). Recommend first
+listening-test background128kbps ~4.52MB or96kbps ~3.39MB; old mushroom files
+already low bitrate. Compression not performed. Local server5177 remainsready.
+
+## Background audio 128 kbps (2026-10-07, local)
+
+Authorized: reduce background from192 to128kbps. User additionally requested
+128 for eight old mushroom recordings; these are already~64kbps AAC, so
+conversion would increase size and add lossy transcoding. Asked whether to keep
+these, convert anyway, or try48kbps. Pending answer; no mushroom assets changed.
+Background encoded directly from ignored audio-originals/sound.wav, verified
+identical to supplied Documents/sond1.wav. Prior192kbps MP3 backed up at ignored
+audio-originals/sound-192kbps.mp3. New public/sound.mp3 is4,518,600bytes versus
+6,777,879bytes,33.33% reduction. MP3 stereo44.1kHz128000bps, duration282.352948s
+unchanged. Full ffmpeg decode passed; localhost returns identical bytes.
+Production build passed with existing Three import/chunk warnings. Browser
+playback check pending. Asset-only change; no new substantive code requiring
+Jev. No commit/push.
+Browser validation completed: /tmp/vestige-background128-check.mjs and .json.
+Actual native WebGPU app entered walking automatically, bed decoded stereo
+282.3529478s and played with running context, gain.072, fade10 and expected
+next-loop time; no page errors. No pointer-capture test. User listening remains
+the quality acceptance step at http://127.0.0.1:5177/. Await mushroom choice.
+User resolved mushroom choice: keep eight original sounds unchanged. Completed
+authorized scope: only background compressed to128kbps; all19 mushroom tracks
+unchanged. Build, full decode, local HTTP bytes and native browser playback
+verified. Stop for user listening; no commit/push or further optimization.
+
+## Publication batch (2026-10-07)
+
+User explicitly authorized commit and push of all current changes to origin/main
+HASHQIX/VESTIGE as Anatoli Shumer <shumerhere@gmail.com>. Batch includes material
+cache,20Hz audio proximity, exact guide grid + regression, shader guards on both
+backends, intro pointer capture,11 added recordings + balanced assignment,
+background128kbps and supporting checks/state. Old8 recordings unchanged.
+Pre-publication: fetched origin/main, HEAD matched remote; production build and
+97 guide-oracle cases plus lifetime/replacement/retry/reset checks passed; diff
+whitespace check clean. Reviewed prior partial Jev reports and documented
+investigations; no substantive code changed since those reviews. Background
+and new audio browser validations available. Audio originals/backups, dist,
+node_modules and temporary harnesses stay ignored/outside repo. Next operation:
+commit authorized batch, normal push, verify remote commit and clean worktree.

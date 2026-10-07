@@ -123,29 +123,34 @@ export function matter1(bindings) {
 		const previousUV = uv0.sub( s.rg ).toVar();
 		const h = history.sample( clamp( previousUV, vec2( 0. ), vec2( 1. ) ) ).toVar();
 		const valid = select( inside( previousUV ).and( s.b.greaterThan( .05 ) ).and( s.a.greaterThan( .05 ) ).and( h.a.greaterThan( .05 ) ).and( abs( h.a.sub( s.a ) ).lessThan( guard ) ), 1., 0. ).toVar();
-		const low = c.toVar();
-		const high = c.toVar();
+		// Match the WebGL pass: rejected history needs no neighborhood clamp.
+		const accumulated = c.toVar();
+		If( valid.greaterThan( 0. ), () => {
+			const low = c.toVar();
+			const high = c.toVar();
 
-		Loop( { start: int( - 1 ), end: 1, name: 'y', condition: '<=' }, ( { y } ) => {
+			Loop( { start: int( - 1 ), end: 1, name: 'y', condition: '<=' }, ( { y } ) => {
 
-			Loop( { start: int( - 1 ), end: 1, name: 'x', condition: '<=' }, ( { x } ) => {
+				Loop( { start: int( - 1 ), end: 1, name: 'x', condition: '<=' }, ( { x } ) => {
 
-				const n = current.sample( uv0.add( vec2( float( x ), float( y ) ).mul( 2. ).div( resolution ) ) ).rgb.toVar();
-				low.assign( min( low, n ) );
-				high.assign( max( high, n ) );
+					const n = current.sample( uv0.add( vec2( float( x ), float( y ) ).mul( 2. ).div( resolution ) ) ).rgb.toVar();
+					low.assign( min( low, n ) );
+					high.assign( max( high, n ) );
+
+				} );
 
 			} );
 
+			const bounded = clamp( h.rgb, low.mul( .8 ), high.mul( 1.1 ).add( vec3( .01 ) ) ).toVar();
+			const hot = smoothstep( .03, .3, brightness( high ) ).toVar();
+			const moving = smoothstep( .05, 1., length( s.rg.mul( resolution ) ) ).toVar();
+
+			// Proper reprojection has unit scale. Trail length cannot move the history UV.
+
+			const weight = decay.mul( valid ).mul( hot ).mul( add( .20, mul( .55, moving ) ) ).toVar();
+			accumulated.assign( mix( c, bounded, weight ) );
 		} );
 
-		const bounded = clamp( h.rgb, low.mul( .8 ), high.mul( 1.1 ).add( vec3( .01 ) ) ).toVar();
-		const hot = smoothstep( .03, .3, brightness( high ) ).toVar();
-		const moving = smoothstep( .05, 1., length( s.rg.mul( resolution ) ) ).toVar();
-
-		// Proper reprojection has unit scale. Trail length cannot move the history UV.
-
-		const weight = decay.mul( valid ).mul( hot ).mul( add( .20, mul( .55, moving ) ) ).toVar();
-		const accumulated = mix( c, bounded, weight ).toVar();
 		shaderColor.assign( vec4( min( accumulated, vec3( 12. ) ), s.b ) );
 
 	}, 'void' );

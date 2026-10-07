@@ -21,7 +21,10 @@ export function PlayerController(props:Props){
  useEffect(()=>{const media=matchMedia('(prefers-reduced-motion: reduce)'),update=()=>HL.setReducedMotion(media.matches);update();media.addEventListener('change',update);return()=>media.removeEventListener('change',update)},[])
  useEffect(()=>{audio.setMushrooms(forest.mushroomSounds);return()=>audio.setMushrooms([])},[audio,forest])
  useEffect(()=>{
-  const control=new PointerLockControls(camera,gl.domElement);controls.current=control;control.pointerSpeed=.65
+  const lockTarget=document.getElementById('root')??gl.domElement
+  const control=new PointerLockControls(camera,lockTarget);controls.current=control;control.pointerSpeed=.65
+  control.enabled=callbacks.current.enabled&&callbacks.current.mode==='walk'
+  control.isLocked=document.pointerLockElement===lockTarget
   const clear=()=>{keys.current.clear();jump.current=false;velocity.current.set(0,0,0)}
   const lock=()=>callbacks.current.onLock(),unlock=()=>{clear();callbacks.current.onUnlock()},error=()=>callbacks.current.onError()
   control.addEventListener('lock',lock);control.addEventListener('unlock',unlock)
@@ -34,11 +37,12 @@ export function PlayerController(props:Props){
   }
   const up=(event:KeyboardEvent)=>keys.current.delete(event.code)
   window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);document.addEventListener('pointerlockerror',error);document.addEventListener('visibilitychange',clear)
-  const requestLock=()=>{if(control.isLocked)return;try{void Promise.resolve(gl.domElement.requestPointerLock()).catch(()=>callbacks.current.onError())}catch{callbacks.current.onError()}}
+  const requestLock=()=>{if(control.isLocked)return;try{void Promise.resolve(lockTarget.requestPointerLock()).catch(()=>callbacks.current.onError())}catch{callbacks.current.onError()}}
   bridgeRef.current={lock:requestLock,reset:()=>{clear();physics.current=createForestPhysics();tour.current=0;camera.position.set(...forest.stops[0].view);camera.lookAt(...forest.stops[0].target);invalidate()},viewStation:index=>{const stop=forest.stops[index];if(!stop)return;clear();physics.current=createForestPhysics();camera.position.set(...stop.view);camera.lookAt(...stop.target);invalidate()},viewGround:()=>{clear();physics.current=createForestPhysics();camera.position.set(35,forestFloor(35,10)+1.7,10);camera.lookAt(35,forestFloor(35,-5)+1.7,-5);invalidate()},snapshot:()=>({camera:camera.position.toArray(),locked:control.isLocked,forest:{clock:forest.clock,grounded:physics.current.grounded,verticalVelocity:physics.current.verticalVelocity,streaming:forest.streaming?.stats,matterCamera:forest.matterCamera,worldTracers:forest.tracers?.stats},audio:audio.info()})}
   camera.lookAt(...forest.stops[0].target);invalidate();callbacks.current.onReady()
   return()=>{clear();control.removeEventListener('lock',lock);control.removeEventListener('unlock',unlock);control.dispose();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);document.removeEventListener('pointerlockerror',error);document.removeEventListener('visibilitychange',clear);controls.current=null;bridgeRef.current=null}
  },[camera,gl,invalidate,forest,audio,bridgeRef])
+ useEffect(()=>{if(controls.current)controls.current.enabled=props.enabled&&mode==='walk'},[props.enabled,mode])
  useFrame((_state,delta)=>{
   const dt=Math.min(delta,.05)
   if(previousMode.current!==mode){if(mode!=='walk'){keys.current.clear();jump.current=false}velocity.current.set(0,0,0)

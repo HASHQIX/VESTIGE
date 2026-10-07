@@ -43,23 +43,26 @@ vec3 integrate(vec2 origin,vec4 center,float direction){
  float rare=smoothstep(.88,.97,center.a);
  return micro/max(1.,wm)*.55+medium/max(1.,wd)*.3*step(1.5,layers)+longer/max(1.,wl)*.15*rare*step(2.5,layers);
 }
-void main(){vec3 base=texture2D(current,uv0).rgb;vec4 s=surface(uv0),f=flowAt(uv0,s.b);vec3 light=vec3(0.);
- if(s.b>.05&&f.b>.05&&flowLength>.01)light=(integrate(uv0,f,1.)+integrate(uv0,f,-1.))*.5;
+void main(){vec3 base=texture2D(current,uv0).rgb;vec4 s=surface(uv0);vec3 light=vec3(0.);
+ // Empty background has no surface on which to integrate material flow.
+ if(s.b>.05&&flowLength>.01){vec4 f=flowAt(uv0,s.b);if(f.b>.05)light=(integrate(uv0,f,1.)+integrate(uv0,f,-1.))*.5;}
  gl_FragColor=vec4(base+light*smear,1.);
 }`
 const feedback=common+`void main(){vec3 c=texture2D(current,uv0).rgb;vec4 s=surface(uv0);vec2 previousUV=uv0-s.rg;
  vec4 h=texture2D(history,clamp(previousUV,vec2(0.),vec2(1.)));
  float valid=inside(previousUV)&&s.b>.05&&s.a>.05&&h.a>.05&&abs(h.a-s.a)<guard?1.:0.;
+ // Rejected history contributes zero; preserve current color and depth directly.
+ vec3 accumulated=c;if(valid>0.){
  vec3 low=c,high=c;for(int y=-1;y<=1;y++){for(int x=-1;x<=1;x++){vec3 n=texture2D(current,uv0+vec2(float(x),float(y))*2./resolution).rgb;low=min(low,n);high=max(high,n);}}
  vec3 bounded=clamp(h.rgb,low*.8,high*1.1+vec3(.01));
  float hot=smoothstep(.03,.3,brightness(high));float moving=smoothstep(.05,1.,length(s.rg*resolution));
  // Proper reprojection has unit scale. Trail length cannot move the history UV.
- float weight=decay*valid*hot*(.20+.55*moving);vec3 accumulated=mix(c,bounded,weight);
+ float weight=decay*valid*hot*(.20+.55*moving);accumulated=mix(c,bounded,weight);}
  gl_FragColor=vec4(min(accumulated,vec3(12.)),s.b);
 }`
 const motionTrail=common+`uniform sampler2D sharp;void main(){vec3 processed=texture2D(current,uv0).rgb;vec4 s=surface(uv0);vec2 v=clamp(s.rg*velocityScale*trail,vec2(-.025),vec2(.025));vec3 sum=vec3(0.);float weights=0.;
- vec4 materialFlow=flowAt(uv0,s.b);float variation=.3+1.5*materialFlow.a;
- if(s.b>.05){for(int i=0;i<12;i++){float t=float(i)/11.;vec2 p=uv0-v*t*variation;vec4 n=surface(p);float w=(1.-t*.75)*(inside(p)&&n.b>.05&&abs(n.b-s.b)<guard?1.:0.);sum+=bright(texture2D(current,p).rgb)*w;weights+=w;}}
+ if(s.b>.05){vec4 materialFlow=flowAt(uv0,s.b);float variation=.3+1.5*materialFlow.a;
+ for(int i=0;i<12;i++){float t=float(i)/11.;vec2 p=uv0-v*t*variation;vec4 n=surface(p);float w=(1.-t*.75)*(inside(p)&&n.b>.05&&abs(n.b-s.b)<guard?1.:0.);sum+=bright(texture2D(current,p).rgb)*w;weights+=w;}}
  vec3 raw=texture2D(sharp,uv0).rgb;vec3 trails=sum/max(weights,.001);
  gl_FragColor=vec4(max(raw,processed)+max(trails-processed,vec3(0.))*.45,1.);
 }`

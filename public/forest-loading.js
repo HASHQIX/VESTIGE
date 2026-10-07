@@ -3,7 +3,7 @@
  if(!overlay)return;
  const button=overlay.querySelector('.loader-sound'),status=overlay.querySelector('.loader-status');
  let handler,revealHandler,context,sceneReady=false,failed=false,leaving=false,resolveFinish;
- let revealReady=false,readingHoldStarted=false;
+ let revealReady=false,readingHoldStarted=false,soundRequested=false;
  const completion=new Promise(resolve=>{resolveFinish=resolve});
  const tagline=overlay.querySelector('.loader-tagline');
  function holdForReading(){
@@ -15,7 +15,7 @@
  if(matchMedia('(prefers-reduced-motion: reduce)').matches)holdForReading();
  function revealWorld(){
   revealHandler?.();overlay.classList.add('is-leaving');
-  window.setTimeout(()=>{overlay.remove();resolveFinish()},matchMedia('(prefers-reduced-motion: reduce)').matches?220:2250);
+  window.setTimeout(()=>{document.removeEventListener('click',activate);overlay.remove();resolveFinish()},matchMedia('(prefers-reduced-motion: reduce)').matches?220:2250);
  }
  function captureParticles(){
   const ratio=Math.min(window.devicePixelRatio||1,1.5),width=innerWidth,height=innerHeight;
@@ -87,18 +87,27 @@
    await handler(context);overlay.classList.add('sound-enabled');
    button.setAttribute('aria-pressed','true');status.textContent='';enter();
   }catch{
-   button.disabled=false;overlay.classList.remove('sound-enabled');
+   soundRequested=false;button.disabled=false;overlay.classList.remove('sound-enabled');
    status.textContent='Could not enable sound. Try again.';
   }
  }
- button.addEventListener('click',()=>{
-  if(button.disabled||failed)return;
+ function activate(){
+  if(failed)return;
+  // Lock a persistent element during the gesture, even before the canvas exists.
+  const target=document.getElementById('root');
+  if(target&&document.pointerLockElement!==target){
+   try{void Promise.resolve(target.requestPointerLock()).catch(()=>{})}catch{}
+  }
+  if(soundRequested)return;
+  soundRequested=true;
   button.disabled=true;overlay.classList.add('sound-enabled');status.textContent='';
   try{
    context??=new AudioContext();
-   void context.resume().then(prepare).catch(()=>{button.disabled=false;overlay.classList.remove('sound-enabled');status.textContent='Could not enable sound. Try again.'});
-  }catch{button.disabled=false;overlay.classList.remove('sound-enabled');status.textContent='Sound is unavailable in this browser.'}
- });
+   void context.resume().then(prepare).catch(()=>{soundRequested=false;button.disabled=false;overlay.classList.remove('sound-enabled');status.textContent='Could not enable sound. Try again.'});
+  }catch{soundRequested=false;button.disabled=false;overlay.classList.remove('sound-enabled');status.textContent='Sound is unavailable in this browser.'}
+ }
+ // Includes the dust/fade phase, when clicks pass through the overlay.
+ document.addEventListener('click',activate);
  window.__forestLoader={
   stage(){},
   onSound(callback){handler=callback;if(context)void prepare()},
