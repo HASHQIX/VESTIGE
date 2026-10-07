@@ -344,3 +344,18 @@ and diff checks pass; local visual review remains next.
 Star visibility pass: increased the field to 306 stars, enlarged all three star
 groups, raised their gold opacity, and reduced pulse variation so they remain
 clearly visible. Build and diff checks pass.
+
+Current local update: removed the in-world SOUND ON/OFF button, mute state and
+mute method. Startup SOUND ON still unlocks browser audio; pause/resume and
+hidden-tab audio suspension remain. Star sizes doubled from 4/7/10 to 8/14/20.
+User confirmed the apparent dimness came from monitor brightness; no further
+star shader changes were made. Production build and diff checks passed. Real
+WebGL browser entered walk without errors, showed only PAUSE in journey controls,
+and passed pause/CONTINUE/resume checks. Jev sampled 6 of 10 fragments, flagged 2
+audio fragments and marked all 6 uncertain; 4 deferred, no static-only exclusions.
+Flags/uncertainties inspected against full audio/App source and callers: removed
+mute branches are intentionally always audible while active, with pause guarded
+by active/context checks; no additional confirmed defect. Review is partial.
+User authorized committing and pushing this update to origin/main as
+Anatoli Shumer <shumerhere@gmail.com>. Production build and diff checks passed
+again before publication. No further star visibility changes were requested.

@@ -11,7 +11,6 @@ export const MUSHROOM_TRACKS=['/audio/mushroom-1.m4a','/audio/mushroom-2.m4a','/
 export class WorldAudio {
  private graph?:Graph
  private active=false
- private muted=false
  private disposed=false
  private abort=new AbortController()
  private loaded=new Map<string,Promise<AudioBuffer>>()
@@ -92,7 +91,7 @@ export class WorldAudio {
    g.entranceStarted=true;g.entrance.gain.setValueAtTime(0,g.context.currentTime);
    g.entrance.gain.linearRampToValueAtTime(1,g.context.currentTime+Math.max(0,fadeIn));
   }
-  g.master.gain.setTargetAtTime(this.muted?0:1,g.context.currentTime,.3)
+  g.master.gain.setTargetAtTime(1,g.context.currentTime,.3)
  }
 
  setActive(active:boolean){
@@ -100,8 +99,6 @@ export class WorldAudio {
   if(active)void g.context.resume().catch(()=>undefined)
   else {g.master.gain.setTargetAtTime(0,g.context.currentTime,.12);void g.context.suspend().catch(()=>undefined)}
  }
-
- setMuted(muted:boolean){this.muted=muted;const g=this.graph;if(g)g.master.gain.setTargetAtTime(muted||!this.active?0:1,g.context.currentTime,.2)}
 
  update(position:Point,forward:Point){
   const g=this.graph;if(!g||!this.active||g.context.state!=='running')return
@@ -128,13 +125,13 @@ export class WorldAudio {
    voice.output.gain.setTargetAtTime(level,now,.35)
    if(best){const p=voice.panner,[x,,z]=best.mushroom.position;if(p.positionX){p.positionX.setTargetAtTime(x,now,.2);p.positionY.setTargetAtTime(best.y,now,.2);p.positionZ.setTargetAtTime(z,now,.2)}else p.setPosition(x,best.y,z)}
   }
-  g.master.gain.setTargetAtTime(this.muted?0:1,now,.3)
+  g.master.gain.setTargetAtTime(1,now,.3)
  }
 
  info(){
   const g=this.graph;let rms=0
   if(g&&g.context.state==='running'){const data=new Float32Array(256);g.analyser.getFloatTimeDomainData(data);rms=Math.sqrt(data.reduce((sum,v)=>sum+v*v,0)/data.length)}
-  return {state:g?.context.state??'uninitialized',active:this.active,muted:this.muted,entranceGain:g?.entrance.gain.value??0,rms,mushrooms:this.mushrooms.length,voices:g?.voices.map((voice,track)=>({track:track+1,mushroom:voice.id,distance:voice.distance,level:voice.level,loaded:!!voice.buffer,playing:voice.sources.size>0}))??[]}
+  return {state:g?.context.state??'uninitialized',active:this.active,entranceGain:g?.entrance.gain.value??0,rms,mushrooms:this.mushrooms.length,voices:g?.voices.map((voice,track)=>({track:track+1,mushroom:voice.id,distance:voice.distance,level:voice.level,loaded:!!voice.buffer,playing:voice.sources.size>0}))??[]}
  }
 
  dispose(){

@@ -8,9 +8,9 @@ function skyPoint(angle:number,elevation:number,radius:number){return [Math.sin(
 export function createSkySilhouette(orientation:number,_native:boolean){
  const radius=209,random=seeded(104729)
  const starMaterials=[
-  new PointsMaterial({color:0xffc879,size:4,sizeAttenuation:false,transparent:true,opacity:0,depthWrite:false,depthTest:false}),
-  new PointsMaterial({color:0xffa24c,size:7,sizeAttenuation:false,transparent:true,opacity:0,depthWrite:false,depthTest:false}),
-  new PointsMaterial({color:0xfff0c2,size:10,sizeAttenuation:false,transparent:true,opacity:0,depthWrite:false,depthTest:false}),
+  new PointsMaterial({color:0xffc879,size:8,sizeAttenuation:false,transparent:true,opacity:0,depthWrite:false,depthTest:false}),
+  new PointsMaterial({color:0xffa24c,size:14,sizeAttenuation:false,transparent:true,opacity:0,depthWrite:false,depthTest:false}),
+  new PointsMaterial({color:0xfff0c2,size:20,sizeAttenuation:false,transparent:true,opacity:0,depthWrite:false,depthTest:false}),
  ]
  for(const material of starMaterials){material.fog=false;material.blending=AdditiveBlending;material.toneMapped=false}
  const starPhases=[random()*TAU,random()*TAU,random()*TAU],stars:Points[]=[]
