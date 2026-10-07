@@ -741,3 +741,179 @@ investigations; no substantive code changed since those reviews. Background
 and new audio browser validations available. Audio originals/backups, dist,
 node_modules and temporary harnesses stay ignored/outside repo. Next operation:
 commit authorized batch, normal push, verify remote commit and clean worktree.
+
+## Bloom investigation and optimization stage5 (2026-10-07, active/local)
+
+Authorized: compare identical scene with screen bloom enabled versus all bloom
+passes skipped; optimize if measurable benefit while preserving perceived glow.
+Do not change filament density, exposure, temporal settings, sound or input.
+No publication authorized in this stage. Acceptance: frozen live inputs and
+valid per-submission GPU timestamps, draw counts proving OFF bypass, screenshots
+and numeric quality comparison for any proposed optimization, native/fallback
+smoke and build/guide regression + shared Jev when substantive code changes.
+Prior app-level gpu profiler sums stale timestamp entries across frame batches:
+its old absolute numbers are unsuitable to estimate bloom share. Native bloom
+uses scale1/3,5mips and12 effect draws plus output; blur taps already bilinear
+paired upstream. Next: temporary browser-only instrumented benchmark.
+
+Stage5 investigation completed locally; application source unchanged. Compared
+stock screen bloom ON, fully bypassed OFF (only output draw), scales.25/.30,
+and an experimental fused mip composite/output. All changes injected through
+temporary Playwright routing, not written into application or dependencies.
+Native Chromium Metal/WebGPU,1200x800; frozen stationary and walking captures,
+same camera/geometry/materials/textures and temporal histories restored before
+every full render. Draw assertions:13 ON,1 OFF,12 fused. No pointer-lock test.
+Screenshots inspected /tmp/vestige-bloom-fused-contact.png: OFF visibly removes
+soft halos; fused matches stock perceptually. Fused numeric RMSE~.000054-.000058,
+zero RGB channels differ by more than1/255. No browser page/console errors.
+
+Important timing limitation: summed timestamp entries for full frames exceeded
+queue-completed wall time (e.g.90ms vs8.9ms). They are invalid absolute costs
+and cannot establish bloom's percentage of GPU work; do not cite those sums or
+the isolated multi-draw sums as reliable milliseconds. Resolution experiments
+did not establish an acceleration with reliable full-render wall measurements.
+Repeated full-render comparison WITHOUT timestamp tracking/profiler, alternating
+variant order,8warmup then56samples each per captured scene; waits for device
+queue completion, including final output, with history restoration flushed and
+excluded. /tmp/vestige-bloom-wall-check.mjs, -stationary.json, -moving.json.
+Stationary wall median ON9.4ms / OFF9.1ms / fused9.4ms; means9.5/9.030/9.4.
+Walking-capture wall median ON7.1ms / OFF6.8ms / fused7.1ms; means7.166/6.768/7.104.
+Full-render CPU submission means stationary.845/.557/.834ms, walking.850/.582/
+.838ms. OFF wall median improvement~3-4%; fused median improvement0, mean<~1.1%.
+These are controlled headless submission-to-queue-completion comparisons, not
+interactive FPS, CPU utilization, energy measurements or guarantees for other
+devices/backends. Live continuous movement/higher resolutions/WebGL were not
+benchmarked in this stage. Bloom is not established as the main bottleneck here.
+
+Decision: keep current stock bloom (already1/3resolution, paired blur samples).
+Do not ship lower-resolution or private-internals fused helper without a useful
+stable gain. No substantive application change, so new build/regression/Jev and
+fallback smoke are unnecessary for this investigation; prior code validations
+remain applicable. Only TASK_STATE.md changed. Server5177 HTTP200 verified.
+Acceptance fulfilled: investigate and optimize conditionally; no useful variant
+accepted. No commit/push/deployment. Stop this stage for user review. Further
+optimization requires a separately agreed stage; next candidate is whole-frame
+workload profiling, not further bloom quality reduction.
+
+## Light workload stage6 (2026-10-07, active/local)
+
+Authorized: measure separate filaments, moving tracer layer and temporal flow
+work on frozen identical stationary/moving scenes; select one meaningful quality-
+preserving optimization, validate locally, stop for user assessment. No publish.
+Preserve density/exposure/sound/input and existing graphics. No pointer-lock test.
+Next: isolated queue-completed native pass timing without timestamp tracking;
+compare scene draws with individual layers omitted and each temporal shader.
+After substantive changes run build/guides, paired GPU equivalence and shared Jev.
+
+Stage6 completed as measurement + rejected optimization experiments. Native
+Chromium/Metal at1200x800, scene frozen after stationary/5s walking capture;
+camera/material/geometry/history held fixed. Timestamp tracking and app profiler
+disabled. Each isolated sample submits4identical renders then awaits queue
+completion;8warmup then32samples, job order alternated. Restoring color/velocity
+inputs happens outside timing. Report /tmp/vestige-stage6-profile-{stationary,
+moving}.json, harness /tmp/vestige-stage6-profile.mjs. Medians milliseconds:
+stationary colorAll2.70, colorNoTracer1.475, colorNoFibers1.475, velocity3.35,
+flow2.175, feedback.20, motion.375. Walking capture colorAll2.375,
+colorNoTracer1.575, colorNoFibers.925, velocity2.20, flow1.90, feedback.20,
+motion.40. Color omission is a diagnostic, not a proposed visual change. These
+are queue-completed isolated workloads, not CPU-utilization/FPS or additive
+whole-frame percentages. Both main color and velocity render moving trails.
+Velocity stats~1.87million triangles versus2.30-2.33million source triangles.
+Largest tested blocks are velocity/flow/color; ordering changes with view.
+
+Experiment1: native flowAt neighbor Loop4 kept loading neighbors after a valid
+neighbor selected. Added Break at successful selection in matter0/2 to mirror
+unchanged GLSL first-neighbor return.60synthetic GPU comparisons (10cases x3passes
+x2backends) and6frozen live comparisons matched every half-float output value;
+no nonfinite values or errors. However isolated paired live flow wall medians
+regressed1.875->2.325ms stationary,1.375->1.775ms walking. Rejected.
+Experiment2: generated4fixed conditional lookup branches instead of loop;
+same60synthetic/6live exact comparisons, but flow regressed1.925->2.55ms and
+1.425->1.90ms. Motion remained roughly unchanged. Rejected. Reason for slowdown
+not established; fewer texture fetches alone do not guarantee a GPU speedup.
+Both use 1000x650 live viewport,750x488 flow/history targets;8warmup then40paired
+samples,4draws per queue wait, alternate old/new. Timing has no GPU timestamps.
+Artifacts /tmp/vestige-stage6-{break,unrolled}-{stationary,moving}-live.json;
+synthetic /tmp/vestige-stage6-{webgpu,webgl}-gpu.json and harness -gpu.mjs.
+Native stationary/moving and WebGL full-intro+3s walking smoke had no errors.
+Mouse capture not retested. No audio/visual/input settings changes.
+
+Both source files restored byte-for-byte from stage6pre-edit backups (which
+matched published baseline). Final git diff contains ONLY TASK_STATE.md;
+git diff --check passed. No final substantive code change, so no new Jev/API
+review or redundant production build/regression is required; previous baseline
+validation applies. No claim that rejected candidates improved performance.
+No optimization retained, no commit/push/deployment. Completed authorized local
+comparison and trials; stop before another optimization stage. User-facing
+recommendation: next separately agreed experiment should address geometry work
+in velocity/tracer rendering, carefully preserving partially visible tails.
+
+## Extinguished tracer tails stage7 (2026-10-07, active/local)
+
+Authorized next optimization: omit wholly expired tail segments in native color
+and velocity draws, preserve every partially visible segment and blending order.
+No publication or pointer testing. Candidate GPU binary-search per particle over
+ordered history times, deterministic prefix scan and compact index + indirect
+draw; existing fragment math/visible density untouched, WebGL stays original.
+Acceptance: frozen old/new attachment and full-frame comparisons, measured total
+render including compaction overhead, synthetic expiration/reset boundaries,
+build/guides/native/fallback smoke and Jev if retained. Stop for user assessment.
+Implementation and required local validation complete; awaiting user assessment.
+
+Retained implementation: CompactTracerIndex uses native compute to find a
+conservative live history prefix, scan offsets and generate ordered indices plus
+indexed indirect draw arguments. Color and velocity use the same geometry and
+reconstruct original inputs from vertexIndex. Only fully expired segments are
+omitted; visible fade/birth/depth math and WebGL rendering remain unchanged.
+No per-frame CPU readbacks. Pinned Three r186 attribute-manager INDEX allocation
+is required for INDEX|STORAGE usage. Additional index/auxiliary storage is about
+12.45MB on GPU and 12.45MB of CPU typed arrays: a memory-for-render-work tradeoff.
+Compilation is sequential and stops after unmount; late allocations are released
+after the pending compilation settles. Cleanup restores geometry only while this
+helper still owns it, and does not dispose the borrowed position attribute.
+
+Paired native Chromium Metal/WebGPU comparison at1200x800, stationary and after
+5s walking; same frozen histories/camera/material inputs, timestamp profiler off.
+8warmup then48alternating samples per variant, submission through queue completion,
+including new culling compute; history restoration outside timing. Every half-
+float value matched exactly in color, velocity, flow and final bloom/output; no
+nonfinite values or errors. Retained160231/516096segments stationary (31.05%) and
+167338/516096moving (32.42%); original index order and indirect args verified.
+Full render wall medians old/new: stationary9.0/7.1ms (~21.1% improvement), moving
+7.0/6.7ms (~4.3%). CPU submission means .767/.819ms and .779/.833ms respectively:
+slightly increased, not reduced. These measurements establish GPU rendering work
+reduction, not CPU utilization, energy or interactive FPS on the user's device.
+Reports /tmp/vestige-stage7-{stationary,moving}.json; harness -live.mjs.
+
+Validation: npm run test:tracers passed after final cleanup fix, exercising actual
+TSL on native GPU in24cases: memory bounds, history slots/wrap, initialization,
+expiration, record boundaries, paused memory, clock reset/large clock and endpoint
+boundaries. Oracle uses original generated vertex life/hash/age math; checks all
+potentially live segments, prefix sums, index order, indirect args and ownership.
+Production build and guide regression passed after final changes in Jev stage0.
+Native and forced-WebGL app smoke passed: entry, movement, pause/resume, resize;
+native reduced-motion tracer hide/restore. No errors; inspected both screenshots.
+Pointer capture not retested. Actual React unmount checks passed for normal and
+early cleanup; delayed in-flight compilation allocated then released its buffers
+with restored source geometry and no errors. /tmp/vestige-stage7-cleanup.mjs.
+
+Shared Jev deep review + bounded continuation covered all27eligible fragments;
+final recheck4new/23cached,0flagged,27uncertain,0deferred,1static-only excluded
+TASK_STATE.md. Stage0 checks passed; advisory status remains needs_investigation,
+not a clean classifier pass. Investigated all helper/test/caller uncertainty
+locations against original vertex math, compute-history lifecycle, ordered draw
+regressions, paired attachments and app/cleanup checks. Found and fixed late
+async-compilation disposal risk. No further confirmed issue. Reviewed omitted
+locations in checkpoint; no deferred source coverage. Reports
+/tmp/vestige-stage7-jev{,-continue,-recheck}.json.
+
+Remaining: user visual/performance assessment at http://127.0.0.1:5177/ (HTTP200).
+No required local implementation/check remains. Stop this stage; do not begin
+another optimization without user steering. No commit, push or deployment.
+
+Stage7 publication authorized by user (2026-10-07): commit current optimization,
+regression and investigation state to HASHQIX/VESTIGE main as Anatoli Shumer
+<shumerhere@gmail.com>, then normal push. Fetched origin; HEAD matches origin/main.
+Prior final build/guides/native GPU regression and cleanup checks apply unchanged;
+git diff --check passes. Next: commit, push and verify remote hash/clean worktree.
+Vercel deployment is outside this operation and remains unverified.

@@ -10,6 +10,7 @@ import {forestSources} from '../experience/ForestGlow'
 import {MatterCameraPass} from '../filaments/camera/MatterCameraPass'
 import {cameraCut,type MatterCameraSettings} from '../filaments/camera/matterCameraSettings'
 import {computeTracers} from './ComputeTracers'
+import {compactTracerIndex} from './CompactTracerIndex'
 import {nodeMaterial,type GraphMaterial} from './NodeMaterials'
 import {graphPass} from './GraphPass'
 import {GpuVelocity} from './GpuVelocity'
@@ -21,9 +22,9 @@ export function ForestWebGPU({forest,settings,onReady,onError}:{forest:Forest;se
  const effects=useMemo(()=>{
   const profiler=new URLSearchParams(location.search).get('profile')==='1'?new ForestProfiler(renderer):undefined
   if(profiler)Object.assign(forest.matterCamera,{profile:profiler.stats})
-  const compute=computeTracers(forest.tracers!),matter=new MatterCameraPass(forest.matterCamera)
+  const compute=computeTracers(forest.tracers!),tails=compactTracerIndex(renderer,forest.tracers!,compute.histories),tracerOverrides={...compute.overrides,...tails.overrides},matter=new MatterCameraPass(forest.matterCamera)
   const adaptMatter=graphPass(matter,'matter')
-  const velocity=new GpuVelocity(compute.overrides,renderer)
+  const velocity=new GpuVelocity(tracerOverrides,renderer)
   const color=new RenderTarget(1,1,{type:HalfFloatType}),scratch=[new RenderTarget(1,1,{type:HalfFloatType,depthBuffer:false})],encoded=new RenderTarget(1,1,{type:HalfFloatType,depthBuffer:false})
   const depth=new RenderTarget(1,1,{minFilter:NearestFilter,magFilter:NearestFilter});depth.depthTexture=new DepthTexture(1,1,UnsignedIntType);depth.depthTexture.format=DepthFormat
   forest.filaments!.uniforms.bodyDepth.value=depth.depthTexture
@@ -38,16 +39,25 @@ export function ForestWebGPU({forest,settings,onReady,onError}:{forest:Forest;se
     const mesh=object as Mesh,kind=kinds[mesh.name];if(!kind||!('material' in mesh))return
     if(mesh.geometry.getAttribute('meta'))mesh.geometry.setAttribute('fiberMeta',mesh.geometry.getAttribute('meta'))
     live.add(mesh);let entry=meshes.get(mesh)
-    if(!entry){const source=mesh.material as any,graph=nodeMaterial(source,kind,kind==='tracer'?compute.overrides:{},false,renderer),dispose=()=>graph.material.dispose();entry={source,graph,dispose};meshes.set(mesh,entry);source.addEventListener('dispose',dispose);mesh.material=graph.material}
+    if(!entry){const source=mesh.material as any,graph=nodeMaterial(source,kind,kind==='tracer'?tracerOverrides:{},false,renderer),dispose=()=>graph.material.dispose();entry={source,graph,dispose};meshes.set(mesh,entry);source.addEventListener('dispose',dispose);mesh.material=graph.material}
    })
    for(const [mesh,e] of meshes)if(!live.has(mesh)){e.source.removeEventListener('dispose',e.dispose);e.graph.material.dispose();meshes.delete(mesh)}
   }
   function syncMaterials(){for(const entry of meshes.values())entry.graph.sync()}
   refreshMaterials();velocity.syncSources(forestSources(forest))
   Object.assign(forest.matterCamera,{backend:'webgpu',compute:compute.stats,renderBudget:{bloomMode:glow?'screen':'local-profile',bloomScale:glow?.getResolutionScale()??0,filamentDensity:'preserved'}})
-  const state={profiler,compute,matter,adaptMatter,velocity,color,scratch,encoded,depth,finalTexture,glow,output,final,meshes,refreshMaterials,syncMaterials,previousView:new Matrix4(),previousProjection:new Matrix4(),previousPosition:new Vector3(),previousRotation:new Quaternion(),direction:new Vector3(),pose:{clock:0,dissolve:0,activity:1},initialized:false,temporal:false,revision:forest.matterRevision,compiled:false,disposed:false,error:undefined as unknown}
+  const state={profiler,compute,tails,matter,adaptMatter,velocity,color,scratch,encoded,depth,finalTexture,glow,output,final,meshes,refreshMaterials,syncMaterials,previousView:new Matrix4(),previousProjection:new Matrix4(),previousPosition:new Vector3(),previousRotation:new Quaternion(),direction:new Vector3(),pose:{clock:0,dissolve:0,activity:1},initialized:false,temporal:false,revision:forest.matterRevision,compiled:false,disposed:false,error:undefined as unknown}
   // r186 precompiles the native compute pipeline before the first warm-up.
-  renderer.compileComputeAsync(compute.simulation).then(()=>{if(!state.disposed){state.compiled=true;invalidate()}}).catch(error=>{if(state.disposed)return;state.error=error;console.error('Forest compute compilation failed',error);onError()})
+  // Stop between pipelines on unmount. An in-flight compilation may allocate
+  // buffers after cleanup; release those once it settles, before continuing.
+  const compile=async()=>{
+   try{
+    for(const node of [compute.simulation,...tails.passes]){if(state.disposed)return;await renderer.compileComputeAsync(node)}
+    if(!state.disposed){state.compiled=true;invalidate()}
+   }catch(error){if(!state.disposed){state.error=error;console.error('Forest compute compilation failed',error);onError()}}
+   finally{if(state.disposed){tails.dispose();compute.dispose(renderer)}}
+  }
+  void compile()
   return state
  },[renderer,forest,scene,camera,invalidate,onError])
  useEffect(()=>{invalidate()},[settings,invalidate])
@@ -57,7 +67,7 @@ export function ForestWebGPU({forest,settings,onReady,onError}:{forest:Forest;se
  },[effects,forest,size.width,size.height,invalidate])
  useEffect(()=>{
   const previous=renderer.info.autoReset;renderer.info.autoReset=false
-  return()=>{effects.disposed=true;effects.profiler?.dispose();renderer.info.autoReset=previous;effects.meshes.forEach((e,mesh)=>{e.source.removeEventListener('dispose',e.dispose);mesh.material=e.source;e.graph.material.dispose()});effects.compute.dispose(renderer);effects.velocity.dispose();effects.adaptMatter.dispose();effects.matter.dispose();effects.output.dispose();effects.final.dispose();effects.glow?.dispose();effects.depth.dispose();effects.color.dispose();effects.scratch.forEach(t=>t.dispose());effects.encoded.dispose()}
+  return()=>{effects.disposed=true;effects.profiler?.dispose();renderer.info.autoReset=previous;effects.meshes.forEach((e,mesh)=>{e.source.removeEventListener('dispose',e.dispose);mesh.material=e.source;e.graph.material.dispose()});effects.velocity.dispose();effects.tails.dispose();effects.compute.dispose(renderer);effects.adaptMatter.dispose();effects.matter.dispose();effects.output.dispose();effects.final.dispose();effects.glow?.dispose();effects.depth.dispose();effects.color.dispose();effects.scratch.forEach(t=>t.dispose());effects.encoded.dispose()}
  },[effects,renderer])
  useEffect(()=>{
   if(new URLSearchParams(location.search).get('debug')!=='1')return
@@ -80,6 +90,7 @@ export function ForestWebGPU({forest,settings,onReady,onError}:{forest:Forest;se
   f.uniforms.activity.value=matchMedia('(prefers-reduced-motion: reduce)').matches?0:1;f.uniforms.baseVisibility.value=f.uniforms.activity.value>0?settings.baseFibers:1
   forest.tracers!.focus(camera.position,e.direction);forest.tracers!.mesh.visible=f.uniforms.activity.value>0&&forest.tracers!.stats.guides>0
   measured('simulation',()=>e.compute.update(renderer,forest.clock,settings.worldFlowSpeed,settings.worldMemory,settings.worldWave))
+  measured('tailCull',()=>e.tails.update())
   for(const layer of forest.matterMeshes){
    layer.uniforms.bakedBloom.value=layer.material.userData.glowMode==='local'?settings.bloom/.38:0
    layer.uniforms.fiberFlowSpeed.value=settings.worldFlowSpeed
