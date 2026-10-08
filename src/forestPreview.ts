@@ -5,10 +5,32 @@ import {capPoint,mushroomFrame} from './implicitBody.ts'
 import {limbRadii,type WorldSkeleton} from './worldSkeleton.ts'
 import type {createFilamentRenderer} from './filaments/FilamentRenderer.ts'
 
+// Clip once during preview construction: unloaded terrain cannot supply depth.
+// The clearance margin keeps Float32 endpoints and curved terrain intersections
+// above the soil. Subdivide only segments close enough to cross its curvature.
+export function appendPreviewSegment(positions:number[],a:Vector3,b:Vector3){
+ const da=a.y-forestFloor(a.x,a.z)-.01,db=b.y-forestFloor(b.x,b.z)-.01
+ const error=(.65*((b.x-a.x)*.06)**2+1.25*((b.z-a.z)*.044)**2)/8
+ if(Math.max(da,db)<-error)return
+ if(Math.min(da,db)<error){
+  if(error>.0025){const mid=a.clone().lerp(b,.5);appendPreviewSegment(positions,a,mid);appendPreviewSegment(positions,mid,b);return}
+  if(da<0&&db<0)return
+  if(da<0||db<0){
+   let visible=da>=0?0:1,buried=da>=0?1:0
+   const edge=a.clone()
+   for(let i=0;i<16;i++){const t=(visible+buried)/2;edge.copy(a).lerp(b,t);if(edge.y>=forestFloor(edge.x,edge.z)+.01)visible=t;else buried=t}
+   edge.copy(a).lerp(b,visible)
+   if(da<0)positions.push(...edge.toArray(),...b.toArray());else positions.push(...a.toArray(),...edge.toArray())
+   return
+  }
+ }
+ positions.push(...a.toArray(),...b.toArray())
+}
+
 // Analytic silhouettes, not another field bake or particle simulation.
 export function previewLines(layout:ForestLayout,skeleton:WorldSkeleton){
  const positions:number[]=[]
- const line=(points:Vector3[])=>{for(let i=1;i<points.length;i++)positions.push(...points[i-1].toArray(),...points[i].toArray())}
+ const line=(points:Vector3[])=>{for(let i=1;i<points.length;i++)appendPreviewSegment(positions,points[i-1],points[i])}
  for(const limb of skeleton.limbs)for(let strand=0;strand<16;strand++){
   const points:Vector3[]=[]
   for(let i=0;i<=24;i++){

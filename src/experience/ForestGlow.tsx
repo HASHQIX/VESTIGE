@@ -23,11 +23,11 @@ export function forestSources(forest:Forest){
  return sources
 }
 
-export function ForestGlow({forest,settings=defaultMatterCamera,onReady}:{forest:Forest;settings?:MatterCameraSettings;onReady:()=>void}) {
+export function ForestGlow({forest,settings=defaultMatterCamera,previewBrightness=1,onReady}:{forest:Forest;settings?:MatterCameraSettings;previewBrightness?:number;onReady:()=>void}) {
  const {gl,scene,camera,size,invalidate}=useThree()
  const reportedReady=useRef(false)
  // Controls remain live in the paused demand loop as well as during movement.
- useEffect(()=>{invalidate()},[settings,invalidate])
+ useEffect(()=>{invalidate()},[settings,previewBrightness,invalidate])
  const effects=useMemo(()=>{
   const composer=new EffectComposer(gl),render=new RenderPass(scene,camera)
   const bloom=new UnrealBloomPass(new Vector2(1,1),forest.filaments ? .22 : .68,forest.filaments ? .25 : .45,forest.filaments ? 1.05 : .82),output=new OutputPass(),aa=new ShaderPass(FXAAShader)
@@ -96,7 +96,7 @@ export function ForestGlow({forest,settings=defaultMatterCamera,onReady}:{forest
    if(m&&effects.velocity&&temporal){effects.velocity.render(gl,camera,effects.previousView,effects.previousProjection,effects.pose);forest.matterCamera.velocityWork=effects.velocity.stats;m.uniforms.velocity.value=effects.velocity.target.texture;m.uniforms.flow.value=effects.velocity.flowTexture;m.uniforms.body.value=depth.depthTexture;m.uniforms.range.value.copy(f.uniforms.cameraRange.value);m.uniforms.inverseVP.value.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse).invert();m.uniforms.previousVP.value.multiplyMatrices(effects.previousProjection,effects.previousView)}
   }
   effects.composer.render(delta)
-  if(forest.preview){forest.preview.uniforms.gain.value=1;const mask=camera.layers.mask,background=scene.background,autoClear=gl.autoClear
+  if(forest.preview){forest.preview.uniforms.gain.value=previewBrightness;const mask=camera.layers.mask,background=scene.background,autoClear=gl.autoClear
    try{gl.getDrawingBufferSize(forest.preview.uniforms.resolution.value);camera.layers.set(2);scene.background=null;gl.autoClear=false;gl.render(scene,camera)}
    finally{camera.layers.mask=mask;scene.background=background;gl.autoClear=autoClear}
   }

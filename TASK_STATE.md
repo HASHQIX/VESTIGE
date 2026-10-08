@@ -917,3 +917,191 @@ regression and investigation state to HASHQIX/VESTIGE main as Anatoli Shumer
 Prior final build/guides/native GPU regression and cleanup checks apply unchanged;
 git diff --check passes. Next: commit, push and verify remote hash/clean worktree.
 Vercel deployment is outside this operation and remains unverified.
+
+
+## Local lighting stage 1 (2026-10-08)
+
+Authorized: plan incremental integration of ideas from Wavefront Tracer, implement
+a small first experiment, and evaluate on the local server. No publication.
+Plan: (1) entrance-mushroom surface lighting + A/B comparison; (2) evaluate and
+tune intensity/shadows, then extend to other mushrooms/streamed receivers;
+(3) try a sound-driven pulse through the root network. Temporal upscaling stays
+a separate later experiment. Stage 1 implemented; next stage awaits visual
+feedback on the current result rather than expanding the scope immediately.
+
+Implementation: four sample emitters under mushroom 56 (same nearest rule as
+entrance recording), 18 m maximum range. Approximate direct illumination with
+normal-facing, falloff and blockers, baked onto nearby initial surface vertices
+in the worker. Exact endpoint field samples, 0.4 m cached interior samples,
+0.45 m visibility steps: thin blockers/details are approximate, not exact ray
+tracing. Retained triangles only where lighting is nonzero. Three owning meshes
+with standard Three materials work on WebGPU and WebGL. The fixed initial light
+is outside streamed groups, preventing duplicated additive illumination while
+patches overlap and preserving it when the original patch is evicted. Later
+patches do not rebake/add light; extending receiver coverage is stage 2.
+LIGHT ON/OFF controls and light=off startup; toggling on pause invalidates one
+frame without resuming movement or audio. New resources dispose with the forest.
+
+Validation: production build, 97 guide cases/lifetime checks, local-light
+synthetic blockers/backfaces/range/finite outputs/source ties/cache/ownership
+regression, and 24 native-GPU tracer boundary cases passed. Actual native WebGPU
+and forced WebGL entered, moved, paused/resumed, resized and toggled without
+page/console errors. Screenshots inspected; mobile control bounds inspected.
+light=off startup and mouse/Space toggles while paused preserve position, paused
+mode and suspended audio; About blocks movement, and resume restores playback.
+Actual React unmount releases all three light meshes and removes the debug bridge
+without page errors. Pointer capture was not retested. Artifacts:
+/tmp/vestige-light-smoke.json, /tmp/vestige-light-controls.mjs,
+/tmp/vestige-light-mobile.png, /tmp/vestige-light-final-{on,off}.png.
+
+Cost: initial light bake improved from ~6.1 s to ~1.1–2.1 s with cached field
+queries. Final source footprint: 16,691 vertices and 32,362 triangles across three
+meshes. Repeated queue-completed full-render medians varied across runs (OFF/ON
+8.7/9.0, 14.6/15.4, 7.2/7.2 ms); render/draw instrumentation was not consistently
+stable, so this does not establish a precise whole-frame overhead, FPS or speedup.
+A controlled performance comparison remains necessary before scaling the effect.
+/tmp/vestige-light-bench.json and -bench.mjs include the latest local experiment
+and successful unmount check. No GPU timestamp sums used.
+
+Jev deep, recheck and bounded continuations covered all 56 eligible fragments:
+1 flagged UI fragment, 56 uncertain (overlapping counts), 0 deferred, 2 static-only
+exclusions (.jev/project.json and package-lock.json). Configured build, guides and
+local-light checks passed. Advisory remains needs_investigation, not a clean
+classifier pass. Investigated all attention locations against complete source
+and callers: App/button event boundaries, pause/About/audio gates, worker initial
+request ID/transfer buffers, source selection and tie behavior, generated array
+contracts, approximate field sampling, material backend compatibility, geometry
+ownership and cleanup. UI flag not reproduced by actual paused mouse/Space and
+About tests; no further confirmed defect. Source invariants: generated bodies
+have finite normals/positions and triangle indices; layout has mushrooms; cached
+interior occlusion is intentionally approximate; only initial worker request
+bakes light; standard material owns copied geometry, never borrowed source
+attributes. All uncertain new helpers exercised by regression and actual browser
+checks. Reports /tmp/vestige-light-jev-{summary,recheck,continue,source-page,final-page}.json.
+
+Server: http://127.0.0.1:5177/ running via npm run dev. Current source local only;
+no commit, push or deployment. Next: user comparison using LIGHT ON/OFF.
+
+
+## Lightweight visibility revision (2026-10-08)
+
+User feedback: added surface-light color does not improve the scene; only extend
+visibility across the forest if it does not undo performance optimization.
+Do not expand the baked entrance illumination to all mushrooms.
+
+Removed the stage-1 surface bake, fixed light meshes, worker transfers, helper
+modules, its regression script and added esbuild dev dependency/configured check.
+The worker, forest assembler and package files now match the optimized HEAD.
+Stage-1 work remains recoverable in /tmp/vestige-local-light-stage1 (patch/helpers)
+and its prior validation records above are historical, not current behavior.
+
+New local A/B comparison changes only existing render values: base filament
+visibility 0.12 to 0.16; existing global mushroom/root/ground preview gain times
+1.5. Original palette and preview occlusion/distance/region masks preserved.
+No additional meshes, rays, targets, passes or streaming budget. BRIGHTER /
+ORIGINAL toggle defaults to BRIGHTER; visibility=off selects original startup.
+Both backends invalidate the paused demand loop when visibility changes.
+Validation and advisory review pending below. No publication authorized.
+
+
+Validation of revision: configured production build and guide selection/lifetime
+checks passed. Actual Chromium native WebGPU and forced WebGL passed original
+startup query, brighter/original mouse and Space toggles on pause, unchanged
+camera/audio, About movement gating, resize/mobile bounds, resume/W movement,
+and real React unmount removing canvas/debug bridge. No page/console errors in
+these scoped runs; screenshots inspected. A separate optional pointer-capture
+probe was rejected by the headless Pointer Lock API (Three console error);
+pointer capture is not verified by the successful scoped runs, and its source
+is unchanged. A/B resource checks temporarily freeze streaming requests to keep
+resident geometry fixed; original streaming source and worker match HEAD.
+
+Fixed-view A/B: both modes use the same 61 geometry objects and 152,156 preview
+vertices; native draw calls 55/55, WebGL 56/56. Existing renderer effects, forest
+group, filament manager and preview retain identity through the toggle. Three
+resident patches, two presented, limit four. No entrance-light mesh remains.
+This establishes unchanged resources and draw work, not an exact FPS guarantee
+or GPU-time measurement. Artifacts /tmp/vestige-visibility-smoke.{mjs,json} and
+/tmp/vestige-visibility-{webgpu,webgl}-{original,brighter,mobile}.png.
+
+Jev deep plus one bounded continuation: all 22 eligible source fragments covered;
+1 UI behavior flag and 22 uncertain fragments (overlap), 0 deferred; README.md
+and TASK_STATE.md are the two static-only exclusions. Configured checks passed.
+Advisory remains needs_investigation; not a clean classifier pass. Inspected
+all attention records including omitted locations and complete App/controller,
+ForestEffects, both renderer settings/lifecycle/preview ordering, TSL uniform
+sync and generated preview/filament shaders. Settings memo does not recreate
+effects or change their dependency arrays; paused invalidation schedules the
+new values; visibility does not affect geometry/discard masks or stream limits.
+Original mode restores both backend-specific preview gains and base fibers.
+The UI flag was not reproduced in actual paused mouse/Space and About tests;
+all resource/camera/audio checks passed. No confirmed defect remains from this
+investigation. Reports /tmp/vestige-visibility-jev{,-continue}.json.
+
+Server http://127.0.0.1:5177/ remains running. No commit, push or deployment.
+Next is user visual assessment with BRIGHTER / ORIGINAL; do not expand baked
+lighting or increase scene budgets without new user steering.
+
+
+## Buried distant contours fix (2026-10-08)
+
+User accepted the brighter appearance but reported buried trunks/stems still
+visible in distant unloaded areas. Cause: analytic preview included whole root,
+hub and mushroom segments, while depth only contains nearby streamed terrain.
+
+Preview line construction now clips all contour segments against forestFloor
+with a 0.01 m clearance. The terrain sine curvature bound skips safe above/below
+segments, subdivides ambiguous curved crossings, then bisects boundary crossings
+on the visible side. No per-frame terrain sampling, shader changes, new targets
+or passes. Geometry/physics/layout retain their original placement; only buried
+preview pieces are omitted. Existing brighter/original mode retained.
+
+New test:preview uses Node 22.16 type stripping, dense independent floor checks
+through all 71,312 emitted forest segments, clipping in both directions, input
+ownership, buried/clear segments, crest crossings, exposed valley sections and
+an isolated buried-base mushroom whose visible cap is retained. Configured Jev
+checks now include this regression along with guides and build. Validation below.
+
+
+Validation: test:preview passes independent samples (33 per emitted segment),
+crest/valley/crossing and buried-base cases. Configured guides, preview regression
+and production build all passed. Browser comparison replaces only the preview
+position attribute at a fixed elevated camera with the original uncut geometry,
+then restores the new geometry; streaming requests frozen for this A/B. Native
+WebGPU and forced WebGL: 144,704 original line vertices vs 142,624 clipped;
+10,054 sampled underground points (minimum -4.916 m) vs zero (minimum +0.0099998 m).
+Native draws41/41, 33 geometries, 19 targets; WebGL draws42/42, 33 geometries;
+three resident patches in both modes, existing limit four. Complete preview
+construction measured ~37/41 ms, once at startup; not a measurement of incremental
+clip cost or FPS. Brighter/original pause toggles passed; no browser errors.
+Screenshots inspected for both backends. Prior UI/audio/cleanup verification
+continues to apply to their unchanged source. Artifacts
+/tmp/vestige-ground-smoke.{mjs,json}, /tmp/vestige-ground-{webgpu,webgl}-{before,after}.png.
+
+Jev deep plus bounded full continuations covered all 42 eligible fragments:
+1 UI behavior flag and 42 uncertain fragments (overlap), 0 deferred;
+3 static-only exclusions: .jev/project.json, README.md, TASK_STATE.md.
+Configured checks passed; advisory still needs_investigation, not a clean pass.
+Inspected all attention locations, including omitted records. New helper context:
+finite layout-generated Vector3 inputs, terrain formula and curvature constants,
+recursive quartering of the error bound (terminates), visible-side boundary
+bisection, 1 cm margin exceeding .0025 m approximation/Float32 error, output-only
+ownership and shared backend geometry path. Dense independent segment validation
+and original-vs-fixed browser attributes confirm burial removal and retained
+exposed surfaces. Test missing-context records resolved against the full script,
+real terrain/layout imports, crest/valley coverage and actual Node22.16 execution.
+Remaining records concern unchanged accepted visibility/App code: prior complete
+source/caller and pause/Space/About/audio/cleanup checks still apply; the UI flag
+was not reproduced, and current toggles remain paused. No confirmed defect after
+investigation. Reports /tmp/vestige-ground-jev{,-page2,-final}.json.
+
+Server remains http://127.0.0.1:5177/. Refresh the app to rebuild preview buffers.
+Local only, no commit/push/deployment. Await user assessment of buried-contour fix.
+
+
+Publication authorized by user (2026-10-08): commit the accepted global visibility
+comparison, buried-preview fix, regression and documentation, then normal push
+to HASHQIX/VESTIGE main. Fetched origin: HEAD matches origin/main at f4653ea.
+Final source matches the reviewed/validated revision above; no new code change.
+Existing build/guides/preview and WebGPU/WebGL checks apply; diff check passes.
+Git identity: Anatoli Shumer <shumerhere@gmail.com>. Commit/push this revision
+and verify the remote hash and clean worktree; hosting deployment not checked.

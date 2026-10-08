@@ -8,6 +8,11 @@
       "argv": ["npm", "run", "test:guides"]
     },
     {
+      "name": "preview-ground-regression",
+      "cwd": ".",
+      "argv": ["npm", "run", "test:preview"]
+    },
+    {
       "name": "production-build",
       "cwd": ".",
       "argv": [

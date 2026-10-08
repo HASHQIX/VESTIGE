@@ -16,7 +16,7 @@ import {graphPass} from './GraphPass'
 import {GpuVelocity} from './GpuVelocity'
 import {ForestProfiler} from './ForestProfiler'
 const kinds:Record<string,string>={'layered-filament-matter':'filament','walking-ground-filaments':'filament','world-time-tracer-histories':'tracer','detached-filament-fragments':'spore','ambient-matter-dust':'dust','static-forest-preview':'preview','woven-ground-preview':'groundPreview','cold-luminous-atmosphere':'atmosphere'}
-export function ForestWebGPU({forest,settings,onReady,onError}:{forest:Forest;settings:MatterCameraSettings;onReady:()=>void;onError:()=>void}){
+export function ForestWebGPU({forest,settings,previewBrightness=1,onReady,onError}:{forest:Forest;settings:MatterCameraSettings;previewBrightness?:number;onReady:()=>void;onError:()=>void}){
  const {gl,scene,camera,size,invalidate}=useThree(),renderer=gl as unknown as WebGPURenderer
  const reportedReady=useRef(false)
  const effects=useMemo(()=>{
@@ -60,7 +60,7 @@ export function ForestWebGPU({forest,settings,onReady,onError}:{forest:Forest;se
   void compile()
   return state
  },[renderer,forest,scene,camera,invalidate,onError])
- useEffect(()=>{invalidate()},[settings,invalidate])
+ useEffect(()=>{invalidate()},[settings,previewBrightness,invalidate])
  useEffect(()=>{forest.requestFrame=invalidate;return()=>{forest.requestFrame=undefined}},[forest,invalidate])
  useEffect(()=>{
   const w=size.width,h=size.height;effects.depth.setSize(w,h);effects.color.setSize(w,h);effects.scratch.forEach(t=>t.setSize(w,h));effects.encoded.setSize(w,h);effects.velocity.setSize(w,h);effects.matter.setSize(w,h);forest.uniforms.resolution.value.set(w,h);invalidate()
@@ -106,7 +106,7 @@ export function ForestWebGPU({forest,settings,onReady,onError}:{forest:Forest;se
   if(forest.dust){forest.dust.uniforms.previousView.value.copy(e.previousView);forest.dust.uniforms.previousProjection.value.copy(e.previousProjection);forest.dust.uniforms.previousClock.value=e.pose.clock;forest.dust.uniforms.particleStreak.value=temporal?settings.particleStreak:0}
   if(e.revision!==forest.matterRevision){e.refreshMaterials();e.velocity.syncSources(forestSources(forest));e.revision=forest.matterRevision}
   // Prepare preview uniforms before the single sync, including its later layer-2 draw.
-  if(forest.preview){forest.preview.uniforms.gain.value=.16;forest.preview.uniforms.resolution.value.set(size.width,size.height)}
+  if(forest.preview){forest.preview.uniforms.gain.value=.16*previewBrightness;forest.preview.uniforms.resolution.value.set(size.width,size.height)}
   measured('materials',()=>e.syncMaterials())
   const mask=camera.layers.mask,target=renderer.getRenderTarget(),background=scene.background,autoClear=renderer.autoClear
   try{

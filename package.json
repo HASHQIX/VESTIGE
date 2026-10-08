@@ -10,6 +10,7 @@
     "dev": "vite --host 127.0.0.1 --port 5177 --strictPort",
     "test:guides": "node scripts/test-world-guide-atlas.mjs",
     "test:tracers": "node scripts/test-tracer-culling.mjs",
+    "test:preview": "node --experimental-strip-types scripts/test-preview-ground.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 5177 --strictPort"
   },
